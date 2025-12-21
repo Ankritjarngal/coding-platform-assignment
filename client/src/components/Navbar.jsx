@@ -1,13 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Code2, LogOut, Plus } from 'lucide-react';
+import { Code2, LogOut, Plus, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Navbar = () => {
     const navigate = useNavigate();
+    
+    // 1. Get Token and Role from LocalStorage
     const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    
+    // 2. Check if the user is an Admin
+    const isAdmin = role === 'admin';
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('role'); // Important: Clear role on logout
         toast.success("Logged out successfully");
         navigate('/auth');
     };
@@ -20,14 +27,16 @@ const Navbar = () => {
                     <Code2 className="w-7 h-7 text-accent" />
                 </Link>
 
-                {/* Admin Link (Add Problem) */}
-                <Link 
-                    to="/admin" 
-                    className="flex items-center gap-1 text-sm font-medium text-gray-400 hover:text-white transition-colors"
-                >
-                    <Plus size={16} />
-                    Add Problem
-                </Link>
+                {/* 👇 CONDITIONAL RENDERING: Only show if isAdmin is true 👇 */}
+                {isAdmin && (
+                    <Link 
+                        to="/admin" 
+                        className="flex items-center gap-1 text-sm font-bold text-purple-400 hover:text-purple-300 transition-colors bg-purple-900/10 px-3 py-1.5 rounded-full border border-purple-900/20"
+                    >
+                        <Plus size={16} />
+                        Add Problem
+                    </Link>
+                )}
             </div>
             
             {/* Right Side: Auth Buttons */}

@@ -9,6 +9,7 @@ import CourseView from './pages/CourseView'; // <--- Make sure you import this!
 import ProblemView from './pages/Problem'; // Assuming you have this for questions
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
+import AdminRoute from './components/AdminRoute';
 function App() {
   return (
     <BrowserRouter>
@@ -20,8 +21,9 @@ function App() {
         
         {/* Protected Routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/admin" element={<Admin />} />
-        
+        <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<Admin />} />
+        </Route>        
         {/* 👇 THIS IS THE MISSING ROUTE 👇 */}
         <Route path="/course/:id" element={<CourseView />} />
 
