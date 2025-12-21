@@ -5,24 +5,38 @@ import toast from 'react-hot-toast';
 
 const Auth = () => {
     const [isLogin, setIsLogin] = useState(true);
-    const [form, setForm] = useState({ username: '', user_email: '', password: '' });
+    // State matches backend expectations: name, email, password
+    const [form, setForm] = useState({ name: '', email: '', password: '' });
     const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const endpoint = isLogin ? '/user/login' : '/user/register';
+        const endpoint = isLogin ? '/auth/login' : '/auth/register';
+        
         try {
             const { data } = await API.post(endpoint, form);
+            
             if (isLogin) {
+                // Login Success
                 localStorage.setItem('token', data.token);
+                
+                // SAVE THE ROLE TO LOCALSTORAGE
+                localStorage.setItem('role', data.role); 
+
                 toast.success('Welcome back!');
                 navigate('/');
             } else {
+                // Register Success
                 toast.success('Account created! Please login.');
                 setIsLogin(true);
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Something went wrong');
+            const msg = err.response?.data || 'Something went wrong';
+            toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
         }
     };
 
@@ -32,34 +46,58 @@ const Auth = () => {
                 <h2 className="text-2xl font-bold mb-6 text-center text-white">
                     {isLogin ? 'Login to CodeJudge' : 'Create Account'}
                 </h2>
+                
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    
+                    {/* Name Input (Only for Register) */}
                     {!isLogin && (
                         <input
-                            type="email"
-                            placeholder="Email"
+                            type="text"
+                            name="name"
+                            placeholder="Full Name"
+                            value={form.name}
+                            onChange={handleChange}
                             className="p-3 rounded bg-black border border-gray-700 text-white focus:border-accent outline-none"
-                            onChange={(e) => setForm({ ...form, user_email: e.target.value })}
+                            required
                         />
                     )}
+
+                    {/* Email Input */}
                     <input
-                        type="text"
-                        placeholder="Username"
+                        type="email"
+                        name="email"
+                        placeholder="Email Address"
+                        value={form.email}
+                        onChange={handleChange}
                         className="p-3 rounded bg-black border border-gray-700 text-white focus:border-accent outline-none"
-                        onChange={(e) => setForm({ ...form, username: e.target.value })}
+                        required
                     />
+
+                    {/* Password Input */}
                     <input
                         type="password"
+                        name="password"
                         placeholder="Password"
+                        value={form.password}
+                        onChange={handleChange}
                         className="p-3 rounded bg-black border border-gray-700 text-white focus:border-accent outline-none"
-                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                        required
                     />
+
                     <button className="bg-accent p-3 rounded font-bold text-white hover:bg-blue-600 transition">
                         {isLogin ? 'Login' : 'Register'}
                     </button>
                 </form>
+
                 <p className="mt-4 text-center text-gray-400 text-sm">
                     {isLogin ? "Don't have an account? " : "Already have an account? "}
-                    <span onClick={() => setIsLogin(!isLogin)} className="text-accent cursor-pointer hover:underline">
+                    <span 
+                        onClick={() => {
+                            setIsLogin(!isLogin);
+                            setForm({ name: '', email: '', password: '' }); 
+                        }} 
+                        className="text-accent cursor-pointer hover:underline"
+                    >
                         {isLogin ? 'Register' : 'Login'}
                     </span>
                 </p>

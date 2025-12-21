@@ -1,19 +1,33 @@
 import express from 'express';
-import cors from 'cors'
+import cors from 'cors';
+import dotenv from 'dotenv';
+import db from "./middleware/db.js";
+
+// Import Routes
+import authRoutes from './routes/user.js';
 import questionRoutes from './routes/questions.js';
 import solutionRoutes from './routes/solutions.js';
-import userRoutes from './routes/user.js';
-import { authenticateToken } from './middleware/auth.js';
+import courseRoutes from './routes/course.js'; // <--- NEW: Import this
+
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
 
-// Route handlers
+// Use Routes
+app.use('/auth', authRoutes);
 app.use('/Question', questionRoutes);
-app.use('/Solution', authenticateToken, solutionRoutes);
-app.use('/user', userRoutes);
-console.log(process.env.JWT_SECRET)
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
+app.use('/Solution', solutionRoutes);
+app.use('/Course', courseRoutes); // <--- NEW: Add this line
+
+// Test Route
+app.get('/', (req, res) => {
+    res.send('gomonkey');
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });

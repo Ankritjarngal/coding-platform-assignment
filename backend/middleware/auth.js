@@ -1,14 +1,16 @@
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-export function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+dotenv.config();
 
-    if (!token) return res.sendStatus(401);
+function jwtGenerator(user_id) {
+    const payload = {
+        user: {
+            id: user_id
+        }
+    };
 
-    jwt.verify(token, "gomonkey", (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-        next();
-    });
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 }
+
+export default jwtGenerator;
