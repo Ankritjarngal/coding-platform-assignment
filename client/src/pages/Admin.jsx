@@ -1,29 +1,32 @@
 import { useState, useEffect } from 'react';
 import API from '../api';
 import toast from 'react-hot-toast';
-import { Plus, Upload, Users, ArrowLeft, Save, Sparkles, Loader2, Eye, EyeOff, Trash2, FileDown, RefreshCw, Search } from 'lucide-react';
+import { 
+    Plus, Upload, Users, ArrowLeft, Save, Sparkles, Loader2, 
+    Eye, EyeOff, Trash2, FileDown, RefreshCw, Search 
+} from 'lucide-react';
 
 /**
  * COMPONENT: Create Course Form
  */
-const CreateCourse = ({ onSuccess }) => { // Added onSuccess prop to auto-refresh
+const CreateCourse = ({ onSuccess }) => {
     const [form, setForm] = useState({ title: '', description: '', is_public: true });
-    const [isSubmitting, setIsSubmitting] = useState(false); // <--- NEW LOADING STATE
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if(!form.title) return toast.error("Title is required");
         
-        setIsSubmitting(true); // Disable button
+        setIsSubmitting(true);
         try {
             await API.post('/Course/create', form);
             toast.success("Course Created Successfully!");
             setForm({ title: '', description: '', is_public: true });
-            if (onSuccess) onSuccess(); // Switch back to list view
+            if (onSuccess) onSuccess();
         } catch (err) {
             toast.error("Failed to create course");
         } finally {
-            setIsSubmitting(false); // Re-enable button
+            setIsSubmitting(false);
         }
     };
 
@@ -49,7 +52,6 @@ const CreateCourse = ({ onSuccess }) => { // Added onSuccess prop to auto-refres
                     <label htmlFor="public" className="text-gray-300 cursor-pointer">Public Course</label>
                 </div>
                 
-                {/* 👇 DISABLED & LOADING STATE ADDED */}
                 <button 
                     disabled={isSubmitting}
                     className={`w-full font-bold p-3 rounded transition-colors flex justify-center items-center gap-2
@@ -64,7 +66,7 @@ const CreateCourse = ({ onSuccess }) => { // Added onSuccess prop to auto-refres
 };
 
 /**
- * COMPONENT: Manage Questions
+ * COMPONENT: Manage Questions (Curriculum)
  */
 const ManageQuestions = ({ courseId }) => {
     const [form, setForm] = useState({ question: '', category: '' });
@@ -72,7 +74,7 @@ const ManageQuestions = ({ courseId }) => {
     const [hidden, setHidden] = useState([{ input: '', expected_output: '' }]);
     
     const [isGenerating, setIsGenerating] = useState(false);
-    const [isSaving, setIsSaving] = useState(false); // <--- NEW LOADING STATE
+    const [isSaving, setIsSaving] = useState(false);
 
     // --- Helper for Test Case Rows ---
     const TestCaseList = ({ title, cases, setCases, limit, icon: Icon }) => (
@@ -120,7 +122,7 @@ const ManageQuestions = ({ courseId }) => {
     const handleSubmit = async () => {
         if (!form.question || !form.category) return toast.error("Fill details");
         
-        setIsSaving(true); // Disable Button
+        setIsSaving(true);
         try {
             await API.post('/Question/input', {
                 ...form, courseId, testcases: JSON.stringify({ examples, hidden })
@@ -130,7 +132,7 @@ const ManageQuestions = ({ courseId }) => {
             setExamples([{ input: '', expected_output: '' }]);
             setHidden([{ input: '', expected_output: '' }]);
         } catch(e) { toast.error("Failed to save"); }
-        finally { setIsSaving(false); } // Re-enable
+        finally { setIsSaving(false); }
     };
 
     return (
@@ -154,7 +156,6 @@ const ManageQuestions = ({ courseId }) => {
             <TestCaseList title="Run Cases (Visible)" cases={examples} setCases={setExamples} limit={3} icon={Eye} />
             <TestCaseList title="Submit Cases (Hidden)" cases={hidden} setCases={setHidden} icon={EyeOff} />
 
-            {/* 👇 DISABLED & LOADING STATE ADDED */}
             <button 
                 onClick={handleSubmit} 
                 disabled={isSaving || isGenerating}
@@ -169,7 +170,7 @@ const ManageQuestions = ({ courseId }) => {
 };
 
 /**
- * COMPONENT: Manage Students
+ * COMPONENT: Manage Students (Enrollment, Search & Reset)
  */
 const ManageStudents = ({ courseId }) => {
     const [email, setEmail] = useState("");
@@ -178,7 +179,7 @@ const ManageStudents = ({ courseId }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     
-    // 👇 NEW: Separate loading states for different actions
+    // Separate loading states
     const [isAddingSingle, setIsAddingSingle] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -214,22 +215,21 @@ const ManageStudents = ({ courseId }) => {
 
     const handleManualEnroll = async () => {
         if(!email) return;
-        
-        setIsAddingSingle(true); // Lock Button
+        setIsAddingSingle(true);
         try {
             await API.post('/Course/enroll', { email, courseId });
             toast.success("Processed!");
             setEmail("");
             fetchStudents(); 
         } catch (e) { toast.error(e.response?.data?.error || "Failed"); }
-        finally { setIsAddingSingle(false); } // Unlock
+        finally { setIsAddingSingle(false); }
     };
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
         if(!file) return;
         
-        setIsUploading(true); // Lock Upload Area
+        setIsUploading(true);
         const formData = new FormData();
         formData.append('file', file);
         const toastId = toast.loading("Uploading & Processing CSV...");
@@ -240,8 +240,8 @@ const ManageStudents = ({ courseId }) => {
             fetchStudents(); 
         } catch (e) { toast.error("Upload Failed", { id: toastId }); }
         finally { 
-            setIsUploading(false); // Unlock
-            e.target.value = null; // Reset file input to allow same file upload again if needed
+            setIsUploading(false);
+            e.target.value = null; // Reset input
         }
     };
 
@@ -278,12 +278,12 @@ const ManageStudents = ({ courseId }) => {
                             value={email} 
                             onChange={e=>setEmail(e.target.value)} 
                             placeholder="user@example.com" 
-                            disabled={isAddingSingle} // Disable input too
+                            disabled={isAddingSingle}
                             className="bg-black border border-gray-700 p-2 rounded text-sm text-white flex-1 outline-none focus:border-accent transition-colors disabled:opacity-50"
                         />
                         <button 
                             onClick={handleManualEnroll} 
-                            disabled={isAddingSingle} // Disable Button
+                            disabled={isAddingSingle}
                             className={`px-4 py-2 rounded text-sm font-bold text-white transition-colors flex items-center gap-2
                                 ${isAddingSingle ? 'bg-gray-700 cursor-not-allowed' : 'bg-accent hover:bg-blue-600'}
                             `}
@@ -411,6 +411,7 @@ const Admin = () => {
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [activeTab, setActiveTab] = useState("questions");
     const [isCreating, setIsCreating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(null);
 
     useEffect(() => { fetchCourses(); }, []);
 
@@ -421,10 +422,39 @@ const Admin = () => {
         } catch(e) { console.error(e); }
     };
 
-    // Callback when course is created successfully
     const handleCourseCreated = () => {
         setIsCreating(false);
         fetchCourses();
+    };
+
+    // Handle Delete Logic
+    const handleDeleteCourse = async (e, courseId, courseTitle) => {
+        e.stopPropagation(); // Prevent opening the course
+        
+        if (!window.confirm(`⚠️ DANGER ZONE\n\nAre you sure you want to delete "${courseTitle}"?\n\nThis will permanently remove:\n- All student enrollments\n- All questions\n- All grades\n\nThis action cannot be undone.`)) {
+            return;
+        }
+
+        setIsDeleting(courseId);
+        const toastId = toast.loading("Deleting Course...");
+
+        try {
+            await API.delete(`/Course/${courseId}`);
+            toast.success("Course Deleted", { id: toastId });
+            
+            // Remove from list immediately
+            setCourses(courses.filter(c => c.course_id !== courseId));
+            
+            // If we were viewing that course, go back to list
+            if (selectedCourse?.course_id === courseId) {
+                setSelectedCourse(null);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to delete course", { id: toastId });
+        } finally {
+            setIsDeleting(null);
+        }
     };
 
     // --- VIEW 1: Course List ---
@@ -448,15 +478,34 @@ const Admin = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {courses.map(course => (
-                    <div key={course.course_id} onClick={() => setSelectedCourse(course)} className="bg-darker p-6 rounded-xl border border-gray-800 hover:border-accent/50 hover:bg-gray-800/50 cursor-pointer transition group">
+                    <div 
+                        key={course.course_id} 
+                        onClick={() => setSelectedCourse(course)} 
+                        className="bg-darker p-6 rounded-xl border border-gray-800 hover:border-accent/50 hover:bg-gray-800/50 cursor-pointer transition group relative"
+                    >
                         <div className="flex justify-between items-start mb-3">
-                            <h3 className="text-xl font-bold text-white group-hover:text-accent transition-colors">{course.title}</h3>
+                            <h3 className="text-xl font-bold text-white group-hover:text-accent transition-colors pr-8">{course.title}</h3>
+                            
+                            {/* DELETE BUTTON */}
+                            <button 
+                                onClick={(e) => handleDeleteCourse(e, course.course_id, course.title)}
+                                disabled={isDeleting === course.course_id}
+                                className="absolute top-4 right-4 p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all z-10"
+                                title="Delete Course"
+                            >
+                                {isDeleting === course.course_id ? <Loader2 className="animate-spin" size={18}/> : <Trash2 size={18} />}
+                            </button>
+                        </div>
+
+                        <div className="mb-6">
                             <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${course.is_public ? 'bg-green-900/20 text-green-400' : 'bg-red-900/20 text-red-400'}`}>
                                 {course.is_public ? 'Public' : 'Private'}
                             </span>
                         </div>
+                        
                         <p className="text-gray-400 text-sm mb-6 line-clamp-2 min-h-[40px]">{course.description || "No description provided."}</p>
-                        <div className="flex items-center text-gray-500 text-xs font-mono">
+                        
+                        <div className="flex items-center text-gray-500 text-xs font-mono border-t border-gray-800 pt-4">
                             ID: {course.course_id} • Created: {new Date(course.created_at).toLocaleDateString()}
                         </div>
                     </div>

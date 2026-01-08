@@ -1,25 +1,55 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import API from '../api';
 import toast from 'react-hot-toast';
-import { Play, CheckCircle, Terminal, AlertCircle, Loader2, Dot } from 'lucide-react';
+import { Play, CheckCircle, Terminal, AlertCircle, Loader2, Dot, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 
+// 👇 1. DEFINE BOILERPLATE CODE TEMPLATES
+const BOILERPLATES = {
+    c: `#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    // Write your C code here
+    return 0;
+}`,
+    cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    // Write your C++ code here
+    return 0;
+}`,
+    python: `import sys
+
+def solve():
+    # Write your Python code here
+
+if __name__ == '__main__':
+    solve()`,
+    javascript: `// Write your JavaScript code here`
+};
+
 const Problem = () => {
-    const { problemId } = useParams(); // Must match :problemId from App.js
-const id = problemId;
+    const { courseId, problemId } = useParams();
+    const id = problemId; 
+
     const [question, setQuestion] = useState(null);
-    const [code, setCode] = useState("// Write your code here...");
+    
+    // 👇 2. INITIALIZE STATE WITH DEFAULT LANGUAGE & BOILERPLATE
     const [language, setLanguage] = useState("c");
+    const [code, setCode] = useState(BOILERPLATES["c"]); 
+    
     const [isRunning, setIsRunning] = useState(false);
     
     // UI States
-    const [activeTab, setActiveTab] = useState('testcase'); // 'testcase' | 'result'
-    const [activeCaseIndex, setActiveCaseIndex] = useState(0); // For switching between Case 1, 2, 3
+    const [activeTab, setActiveTab] = useState('testcase'); 
+    const [activeCaseIndex, setActiveCaseIndex] = useState(0); 
     
-    const [runResults, setRunResults] = useState(null); // Array of results
+    const [runResults, setRunResults] = useState(null); 
     const [submitResult, setSubmitResult] = useState(null);
 
     useEffect(() => {
@@ -40,12 +70,20 @@ const id = problemId;
         fetchQ();
     }, [id]);
 
+    // 👇 3. HANDLE LANGUAGE CHANGE
+    const handleLanguageChange = (e) => {
+        const newLang = e.target.value;
+        setLanguage(newLang);
+        // Automatically set the code to the boilerplate for the new language
+        setCode(BOILERPLATES[newLang]);
+    };
+
     const handleRun = async () => {
         setIsRunning(true);
         setActiveTab('result');
         setSubmitResult(null);
         setRunResults(null);
-        setActiveCaseIndex(0); // Reset to first case
+        setActiveCaseIndex(0); 
 
         try {
             const token = localStorage.getItem('token');
@@ -59,7 +97,6 @@ const id = problemId;
                 solution: code
             });
             
-            // Backend now returns { results: [...] }
             setRunResults(data.results);
         } catch (err) {
             toast.error("Execution failed");
@@ -95,7 +132,6 @@ const id = problemId;
         </div>
     );
 
-    // Helper to get current result being viewed
     const currentRunResult = runResults ? runResults[activeCaseIndex] : null;
 
     return (
@@ -105,6 +141,16 @@ const id = problemId;
                 {/* --- LEFT: DESCRIPTION --- */}
                 <Panel defaultSize={35} minSize={20}>
                     <div className="bg-darker h-full overflow-y-auto custom-scrollbar p-6 border-r border-gray-800">
+                        
+                        <div className="mb-4">
+                            <Link 
+                                to={`/course/${courseId}`} 
+                                className="inline-flex items-center text-sm text-gray-500 hover:text-white transition-colors"
+                            >
+                                <ArrowLeft size={16} className="mr-1" /> Back to Course
+                            </Link>
+                        </div>
+
                         <h1 className="text-2xl font-bold text-white mb-2">{question.quesid}. {question.question}</h1>
                         <span className={clsx("px-2 py-1 rounded text-xs font-bold", 
                             question.category === 'Easy' ? 'bg-green-900 text-green-300' : 
@@ -136,12 +182,19 @@ const id = problemId;
                         <Panel defaultSize={60} minSize={20}>
                             <div className="flex flex-col h-full bg-[#1e1e1e]">
                                 <div className="h-12 bg-darker border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
-                                    <select value={language} onChange={(e) => setLanguage(e.target.value)} className="bg-black text-gray-300 border border-gray-700 rounded px-3 py-1 text-sm outline-none focus:border-accent">
+                                    
+                                    {/* 👇 4. UPDATED SELECT HANDLER */}
+                                    <select 
+                                        value={language} 
+                                        onChange={handleLanguageChange} 
+                                        className="bg-black text-gray-300 border border-gray-700 rounded px-3 py-1 text-sm outline-none focus:border-accent"
+                                    >
                                         <option value="c">C</option>
                                         <option value="cpp">C++</option>
                                         <option value="python">Python</option>
                                         <option value="javascript">JavaScript</option>
                                     </select>
+
                                     <div className="flex gap-3">
                                         <button onClick={handleRun} disabled={isRunning} className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white px-4 py-1.5 rounded text-sm font-medium transition-all"><Play size={14} /> Run</button>
                                         <button onClick={handleSubmit} disabled={isRunning} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-1.5 rounded text-sm font-medium transition-all"><CheckCircle size={14} /> Submit</button>

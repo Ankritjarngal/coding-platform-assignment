@@ -138,6 +138,30 @@ router.post('/enroll', async (req, res) => {
 });
 
 // 7. Bulk Enroll
+// --- 9. Delete Course ---
+router.delete('/:courseId', async (req, res) => {
+    console.log(`👉 HIT: /delete/${req.params.courseId}`);
+    const { courseId } = req.params;
+    try {
+        // 1. Clean up dependencies (Enrollments, Questions, Pending Invites)
+        // This ensures no "Foreign Key Constraint" errors
+        await db.query("DELETE FROM enrollments WHERE course_id = $1", [courseId]);
+        await db.query("DELETE FROM pending_enrollments WHERE course_id = $1", [courseId]);
+        await db.query("DELETE FROM questions WHERE course_id = $1", [courseId]);
+
+        // 2. Delete the Course
+        const result = await db.query("DELETE FROM courses WHERE course_id = $1 RETURNING *", [courseId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Course not found" });
+        }
+
+        res.json({ message: "Course deleted successfully" });
+    } catch (err) {
+        console.error("❌ ERROR /delete:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
 router.post('/bulk-enroll/:courseId', upload.single('file'), (req, res) => {
     const { courseId } = req.params;
     const emails = [];
