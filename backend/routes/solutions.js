@@ -141,7 +141,7 @@ router.post('/submit', async (req, res) => {
 
         const results = [];
         let allPassed = true;
-        let hiddenPassedCount = 0; // Points Counter
+        let hiddenPassedCount = 0; 
 
         for (let i = 0; i < allCases.length; i++) {
             const tc = allCases[i];
@@ -150,7 +150,6 @@ router.post('/submit', async (req, res) => {
             const passed = result.output.trim() === tc.expected_output.trim();
             if (!passed) allPassed = false;
 
-            // SCORING: Only count if it's a HIDDEN case (index >= number of examples)
             if (i >= exampleCases.length && passed) {
                 hiddenPassedCount++;
             }
@@ -163,10 +162,8 @@ router.post('/submit', async (req, res) => {
                 error: result.error
             });
             
-            // NOTE: We do NOT break loop so we can calculate partial score
         }
 
-        // SAVE SCORE TO DATABASE
         if (userId && courseId) {
             await db.query(`
                 INSERT INTO solved_questions (user_id, question_id, course_id, points)

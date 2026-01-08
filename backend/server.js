@@ -3,11 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import db from "./middleware/db.js";
 
-// Import Routes
 import authRoutes from './routes/user.js';
 import questionRoutes from './routes/questions.js';
 import solutionRoutes from './routes/solutions.js';
-import courseRoutes from './routes/course.js'; // <--- NEW: Import this
+import courseRoutes from './routes/course.js';
 
 dotenv.config();
 
@@ -21,7 +20,7 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/Question', questionRoutes);
 app.use('/Solution', solutionRoutes);
-app.use('/Course', courseRoutes); // <--- NEW: Add this line
+app.use('/Course', courseRoutes); 
 
 // Test Route
 app.get('/', (req, res) => {

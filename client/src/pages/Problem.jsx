@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Play, CheckCircle, Terminal, AlertCircle, Loader2, Dot, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 
-// 👇 1. DEFINE BOILERPLATE CODE TEMPLATES
+// DEFINE BOILERPLATE CODE TEMPLATES
 const BOILERPLATES = {
     c: `#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // Write your C code here\n    return 0;\n}`,
     cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n     return 0;\n}`,
@@ -16,19 +16,15 @@ const BOILERPLATES = {
 };
 
 const Problem = () => {
-    // 👇 Ensure courseId is captured here
     const { courseId, problemId } = useParams();
     const id = problemId; 
 
     const [question, setQuestion] = useState(null);
-    
-    // 👇 2. INITIALIZE STATE WITH DEFAULT LANGUAGE & BOILERPLATE
     const [language, setLanguage] = useState("c");
     const [code, setCode] = useState(BOILERPLATES["c"]); 
     
     const [isRunning, setIsRunning] = useState(false);
-    
-    // UI States
+
     const [activeTab, setActiveTab] = useState('testcase'); 
     const [activeCaseIndex, setActiveCaseIndex] = useState(0); 
     
@@ -53,7 +49,6 @@ const Problem = () => {
         fetchQ();
     }, [id]);
 
-    // 👇 3. HANDLE LANGUAGE CHANGE
     const handleLanguageChange = (e) => {
         const newLang = e.target.value;
         setLanguage(newLang);
@@ -86,7 +81,6 @@ const Problem = () => {
         } finally { setIsRunning(false); }
     };
 
-    // 👇 4. UPDATED SUBMIT HANDLER (Sends courseId & userId)
     const handleSubmit = async () => {
         setIsRunning(true);
         setActiveTab('result');
@@ -97,13 +91,12 @@ const Problem = () => {
             const token = localStorage.getItem('token');
             if(!token) return toast.error("Please login first");
             
-            // Extract User ID safely
             const payload = JSON.parse(atob(token.split(".")[1]));
             const userId = payload.user ? payload.user.id : payload.userid;
 
             const { data } = await API.post('/Solution/submit', {
-                userId: userId,      // 👈 REQUIRED FOR SCORE
-                courseId: courseId,  // 👈 REQUIRED FOR SCORE
+                userId: userId,      
+                courseId: courseId,  
                 questionId: id,
                 language,
                 solution: code
@@ -111,7 +104,6 @@ const Problem = () => {
             
             setSubmitResult(data);
             
-            // Show toast if points were earned
             if (data.score_earned !== undefined && data.score_earned > 0) {
                 toast.success(`Score earned: ${data.score_earned} points!`);
             }
@@ -133,7 +125,6 @@ const Problem = () => {
         <div className="h-[calc(100vh-64px)] w-full bg-black overflow-hidden">
             <PanelGroup direction="horizontal">
                 
-                {/* --- LEFT: DESCRIPTION --- */}
                 <Panel defaultSize={35} minSize={20}>
                     <div className="bg-darker h-full overflow-y-auto custom-scrollbar p-6 border-r border-gray-800">
                         
@@ -169,7 +160,6 @@ const Problem = () => {
 
                 <PanelResizeHandle className="w-1 bg-gray-800 hover:bg-accent cursor-col-resize" />
 
-                {/* --- RIGHT: WORKSPACE --- */}
                 <Panel minSize={30}>
                     <PanelGroup direction="vertical">
                         
@@ -202,7 +192,6 @@ const Problem = () => {
 
                         <PanelResizeHandle className="h-1 bg-gray-800 hover:bg-accent cursor-row-resize" />
 
-                        {/* BOTTOM: CONSOLE */}
                         <Panel defaultSize={40} minSize={10}>
                             <div className="h-full bg-darker flex flex-col">
                                 <div className="flex border-b border-gray-800 shrink-0">
@@ -212,7 +201,6 @@ const Problem = () => {
 
                                 <div className="p-4 overflow-auto font-mono text-sm flex-1 custom-scrollbar">
                                     
-                                    {/* --- INPUT TAB --- */}
                                     {activeTab === 'testcase' && (
                                         <div className="flex gap-2">
                                             {/* Case Buttons */}
@@ -245,7 +233,6 @@ const Problem = () => {
                                         </div>
                                     )}
 
-                                    {/* --- RESULT TAB --- */}
                                     {activeTab === 'result' && (
                                         <div className="h-full">
                                             {isRunning && <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2"><Loader2 className="animate-spin text-accent" size={24} /><span>Running Code...</span></div>}
@@ -291,7 +278,6 @@ const Problem = () => {
                                                 </div>
                                             )}
 
-                                            {/* 2. SUBMIT RESULTS */}
                                             {!isRunning && submitResult && (
                                                 <div className="flex flex-col h-full">
                                                     {submitResult.status === "Accepted" ? (

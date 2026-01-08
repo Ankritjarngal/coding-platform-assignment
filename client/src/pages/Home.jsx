@@ -9,9 +9,7 @@ const Home = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
-    
-    // Custom Modal State
-    const [confirmModal, setConfirmModal] = useState(null); 
+        const [confirmModal, setConfirmModal] = useState(null); 
     const [isStarting, setIsStarting] = useState(false); 
 
     const navigate = useNavigate();
@@ -43,24 +41,20 @@ const Home = () => {
         fetchCourses();
     }, []);
 
-    // 1. Handle Card Click
     const handleCourseClick = (course) => {
         if (isAdmin) {
             navigate(`/course/${course.course_id}`);
             return;
         }
 
-        // Block if locked
         if (course.has_attempted) {
             toast.error("Assessment Locked: You have already attempted this course.");
             return;
         }
 
-        // Open Modal
         setConfirmModal(course);
     };
 
-    // 2. Handle "Start Now" Button in Modal
     const handleConfirmStart = async () => {
         if (!confirmModal) return;
         setIsStarting(true);
@@ -70,7 +64,6 @@ const Home = () => {
             const payload = JSON.parse(atob(token.split(".")[1]));
             const userId = payload.user ? payload.user.id : payload.userid;
 
-            // Mark attempt in backend
             await API.post('/Course/start-attempt', {
                 userId: userId,
                 courseId: confirmModal.course_id
@@ -112,20 +105,17 @@ const Home = () => {
                                     }
                                 `}
                             >
-                                {/* Progress Bar / Header Line */}
                                 <div className={`h-2 w-full ${isLocked ? 'bg-red-900' : 'bg-gradient-to-r from-blue-900 to-accent'}`}></div>
                                 
                                 <div className="p-6">
                                     <div className="flex justify-between items-start mb-4">
                                         
-                                        {/* Icon Box */}
                                         <div className={`p-3 rounded-lg border text-white transition-colors
                                             ${isLocked ? 'bg-red-900/20 border-red-900/50' : 'bg-black border-gray-800 text-accent group-hover:bg-accent'}
                                         `}>
                                             {isLocked ? <Lock size={24} /> : <BookOpen size={24} />}
                                         </div>
                                         
-                                        {/* 👇 MERGED: SCORE DISPLAY 👇 */}
                                         <div className="text-right">
                                              <div className="text-xl font-bold text-white">
                                                 {course.user_score || 0} <span className="text-gray-500 text-sm">/ {course.total_max_score || 0}</span>
@@ -135,12 +125,8 @@ const Home = () => {
                                     </div>
                                     
                                     <h3 className="text-xl font-bold text-white mb-2">{course.title}</h3>
-                                    <p className="text-gray-400 text-sm line-clamp-2 h-10">{course.description}</p>
-                                    
-                                    {/* Footer Badges */}
-                                    <div className="mt-4 pt-4 border-t border-gray-800 text-xs text-gray-500 flex items-center justify-between">
-                                        
-                                        {/* Access Status */}
+                                    <p className="text-gray-400 text-sm line-clamp-2 h-10">{course.description}</p>                                            
+                                    <div className="mt-4 pt-4 border-t border-gray-800 text-xs text-gray-500 flex items-center justify-between">                                        
                                         <span className="flex items-center gap-2">
                                             {isLocked ? (
                                                 <>Contact admin</>
@@ -150,8 +136,6 @@ const Home = () => {
                                                 <><Lock size={14}/> One-Time Exam</>
                                             )}
                                         </span>
-
-                                        {/* Status Badge */}
                                         {isLocked ? (
                                             <span className="text-red-500 font-bold bg-red-900/20 px-2 py-0.5 rounded border border-red-900/30">LOCKED</span>
                                         ) : (
@@ -166,7 +150,6 @@ const Home = () => {
                 </div>
             )}
 
-            {/* 👇 CUSTOM MODAL OVERLAY 👇 */}
             {confirmModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-[#0a0a0a] border border-red-500/30 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
@@ -185,7 +168,6 @@ const Home = () => {
                             <h3 className="text-xl font-bold text-white">Start Assessment?</h3>
                         </div>
 
-                        {/* Modal Body */}
                         <div className="p-6 text-center space-y-4">
                             <p className="text-gray-300 text-sm leading-relaxed">
                                 You are about to start <span className="text-white font-bold">"{confirmModal.title}"</span>.
@@ -199,8 +181,6 @@ const Home = () => {
                                 </ul>
                             </div>
                         </div>
-
-                        {/* Modal Footer (Buttons) */}
                         <div className="p-4 bg-white/5 flex gap-3">
                             <button 
                                 onClick={() => setConfirmModal(null)}

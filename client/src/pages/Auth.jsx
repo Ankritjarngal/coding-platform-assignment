@@ -11,21 +11,17 @@ const Auth = ({ setAuth }) => {
 
     const [inputs, setInputs] = useState({ email: '', password: '', name: '' });
     
-    // Avatar state
     const [avatarSeed, setAvatarSeed] = useState('Felix');
     const [avatarStyle, setAvatarStyle] = useState('adventurer');
 
-    // 👇 NEW: Clear old tokens immediately when this page loads
     useEffect(() => {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
-        // Update Navbar to show "Login" button instead of "Logout"
         window.dispatchEvent(new Event('authUpdated')); 
     }, []);
 
     const onChange = (e) => setInputs({ ...inputs, [e.target.name]: e.target.value });
 
-    // Generate current avatar URL
     const currentAvatarUrl = `https://api.dicebear.com/9.x/${avatarStyle}/svg?seed=${avatarSeed}`;
 
     const onSubmitForm = async (e) => {
@@ -67,7 +63,6 @@ const Auth = ({ setAuth }) => {
                     </p>
                 </div>
 
-                {/* Avatar Selection (Only on Register) */}
                 {!isLogin && (
                     <div className="flex flex-col items-center mb-6">
                         <div className="relative group cursor-pointer" onClick={() => setAvatarSeed(Math.random().toString(36).substring(7))}>

@@ -40,7 +40,6 @@ const Navbar = () => {
     useEffect(() => {
         loadUser();
 
-        // 👇 Listeners for instant updates
         window.addEventListener('authUpdated', loadUser);
         window.addEventListener('profileUpdated', loadUser);
 

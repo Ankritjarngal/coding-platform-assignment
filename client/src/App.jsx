@@ -7,13 +7,10 @@ import Home from './pages/Home';
 import Admin from './pages/Admin';
 import CourseView from './pages/CourseView';
 import Profile from './pages/Profile';
-import SolveProblem from './pages/Problem'; // 👈 1. IMPORT THIS
-
-// Components
+import SolveProblem from './pages/Problem';
 import Navbar from './components/Navbar';
 import AdminRoute from './components/AdminRoute'; 
 
-// --- ROUTE GUARDS ---
 const RequireAuth = ({ children }) => {
     const token = localStorage.getItem('token');
     return token ? children : <Navigate to="/auth" replace />;
@@ -60,7 +57,6 @@ function App() {
                 </RequireAuth>
             } />
             
-            {/* 👇 2. ADD THIS MISSING ROUTE 👇 */}
             <Route path="/solve/:courseId/:problemId" element={
                 <RequireAuth>
                     <SolveProblem />
@@ -77,7 +73,6 @@ function App() {
                 <Route path="/admin" element={<Admin />} />
             </Route>
             
-            {/* Catch-all: This was sending you back to home */}
             <Route path="*" element={<Navigate to="/" replace />} />
 
           </Routes>

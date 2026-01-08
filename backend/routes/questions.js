@@ -8,7 +8,6 @@ const router = express.Router();
 
 // --- GEMINI CONFIG ---
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// Use the model name that worked in your test script
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
 
 // --- GET SINGLE QUESTION ---

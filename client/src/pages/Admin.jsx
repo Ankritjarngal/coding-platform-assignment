@@ -6,9 +6,7 @@ import {
     Eye, EyeOff, Trash2, FileDown, RefreshCw, Search 
 } from 'lucide-react';
 
-/**
- * COMPONENT: Create Course Form
- */
+
 const CreateCourse = ({ onSuccess }) => {
     const [form, setForm] = useState({ title: '', description: '', is_public: true });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,9 +63,6 @@ const CreateCourse = ({ onSuccess }) => {
     );
 };
 
-/**
- * COMPONENT: Manage Questions (Curriculum)
- */
 const ManageQuestions = ({ courseId }) => {
     const [form, setForm] = useState({ question: '', category: '' });
     const [examples, setExamples] = useState([{ input: '', expected_output: '' }]);
@@ -76,7 +71,6 @@ const ManageQuestions = ({ courseId }) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // --- Helper for Test Case Rows ---
     const TestCaseList = ({ title, cases, setCases, limit, icon: Icon }) => (
         <div className="bg-black/30 p-4 rounded-lg border border-gray-800 mb-6">
             <div className="flex justify-between items-center mb-3">
@@ -169,12 +163,7 @@ const ManageQuestions = ({ courseId }) => {
     );
 };
 
-/**
- * COMPONENT: Manage Students (Enrollment, Search & Reset)
- */
-/**
- * COMPONENT: Manage Students
- */
+
 const ManageStudents = ({ courseId }) => {
     const [email, setEmail] = useState("");
     const [activeStudents, setActiveStudents] = useState([]);
@@ -415,9 +404,7 @@ const ManageStudents = ({ courseId }) => {
         </div>
     );
 };
-/**
- * MAIN PAGE: Admin Dashboard
- */
+
 const Admin = () => {
     const [courses, setCourses] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState(null);
@@ -439,9 +426,8 @@ const Admin = () => {
         fetchCourses();
     };
 
-    // Handle Delete Logic
     const handleDeleteCourse = async (e, courseId, courseTitle) => {
-        e.stopPropagation(); // Prevent opening the course
+        e.stopPropagation(); 
         
         if (!window.confirm(`⚠️ DANGER ZONE\n\nAre you sure you want to delete "${courseTitle}"?\n\nThis will permanently remove:\n- All student enrollments\n- All questions\n- All grades\n\nThis action cannot be undone.`)) {
             return;
@@ -454,10 +440,8 @@ const Admin = () => {
             await API.delete(`/Course/${courseId}`);
             toast.success("Course Deleted", { id: toastId });
             
-            // Remove from list immediately
             setCourses(courses.filter(c => c.course_id !== courseId));
             
-            // If we were viewing that course, go back to list
             if (selectedCourse?.course_id === courseId) {
                 setSelectedCourse(null);
             }
@@ -469,7 +453,6 @@ const Admin = () => {
         }
     };
 
-    // --- VIEW 1: Course List ---
     if (!selectedCourse) return (
         <div className="max-w-6xl mx-auto p-6">
             <div className="flex justify-between items-center mb-8 border-b border-gray-800 pb-6">
@@ -498,7 +481,6 @@ const Admin = () => {
                         <div className="flex justify-between items-start mb-3">
                             <h3 className="text-xl font-bold text-white group-hover:text-accent transition-colors pr-8">{course.title}</h3>
                             
-                            {/* DELETE BUTTON */}
                             <button 
                                 onClick={(e) => handleDeleteCourse(e, course.course_id, course.title)}
                                 disabled={isDeleting === course.course_id}
@@ -526,7 +508,6 @@ const Admin = () => {
         </div>
     );
 
-    // --- VIEW 2: Inside Selected Course ---
     return (
         <div className="max-w-6xl mx-auto p-6">
             <button onClick={() => setSelectedCourse(null)} className="text-gray-400 hover:text-white mb-6 flex items-center gap-2 transition">

@@ -24,13 +24,11 @@ const Profile = () => {
         try {
             const { data } = await API.get('/auth/profile');
             setUser(data);
-            // Extract seed and style from existing URL if possible, else default
             setSeed(data.username);
             setIsLoading(false);
         } catch (e) { toast.error("Failed to load profile"); }
     };
 
-    // Generate Avatar URL
     const getAvatarUrl = (style, s) => `https://api.dicebear.com/9.x/${style}/svg?seed=${s}`;
 
     const handleUpdate = async (e) => {
@@ -45,9 +43,7 @@ const Profile = () => {
                 avatar: newAvatarUrl
             });
             
-            // Update local state and storage
             setUser(prev => ({ ...prev, avatar: newAvatarUrl }));
-            // Trigger a custom event so Navbar updates immediately
             window.dispatchEvent(new Event('profileUpdated'));
             
             toast.success("Profile Updated!", { id: loadingId });
@@ -99,7 +95,6 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* Right: User Details Form */}
                 <div className="md:col-span-2 bg-darker p-6 rounded-xl border border-gray-800">
                     <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">Edit Profile</h2>
                     
