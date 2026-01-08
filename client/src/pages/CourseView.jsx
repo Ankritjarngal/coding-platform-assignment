@@ -4,14 +4,18 @@ import API from '../api';
 import { Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
 
 const CourseView = () => {
-    const { id } = useParams(); // This is the Course ID
+    const { id } = useParams();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchCourse = async () => {
             try {
-                const { data } = await API.get(`/Course/${id}`);
+                const token = localStorage.getItem('token');
+                const payload = token ? JSON.parse(atob(token.split(".")[1])) : {};
+                const userId = payload.user ? payload.user.id : payload.userid;
+
+                const { data } = await API.get(`/Course/${id}?userId=${userId}`);
                 setCourse(data);
             } catch (err) { console.error(err); } 
             finally { setLoading(false); }
@@ -26,9 +30,17 @@ const CourseView = () => {
         <div className="max-w-5xl mx-auto p-6">
             <Link to="/" className="text-gray-400 hover:text-white mb-6 flex items-center gap-2"><ArrowLeft size={18}/> Back to Dashboard</Link>
             
-            <div className="bg-darker p-8 rounded-xl border border-gray-800 mb-8">
-                <h1 className="text-3xl font-bold text-white mb-2">{course.title}</h1>
-                <p className="text-gray-400">{course.description}</p>
+            <div className="bg-darker p-8 rounded-xl border border-gray-800 mb-8 flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-white mb-2">{course.title}</h1>
+                    <p className="text-gray-400">{course.description}</p>
+                </div>
+                <div className="bg-black p-4 rounded-lg border border-gray-700 text-center min-w-[120px]">
+                    <span className="text-gray-400 text-xs uppercase font-bold">Your Score</span>
+                    <div className="text-3xl font-bold text-accent mt-1">
+                        {course.user_score || 0} <span className="text-gray-600 text-lg">/ {course.max_score || 0}</span>
+                    </div>
+                </div>
             </div>
 
             <h2 className="text-xl font-bold text-white mb-4">Course Curriculum</h2>
@@ -41,7 +53,7 @@ const CourseView = () => {
                             className="group flex justify-between items-center bg-darker p-5 rounded-xl border border-gray-800 hover:border-accent hover:bg-gray-800/50 transition-all"
                         >
                             <div className="flex items-center gap-4">
-                                <span className="flex items-center justify-center w-8 h-8 rounded bg-gray-800 text-gray-400 font-mono text-sm group-hover:bg-accent group-hover:text-white transition-colors">{idx + 1}</span>
+                                <span className="flex items-center justify-center w-10 h-10 p-4 rounded-full bg-gray-800 text-gray-400 font-mono text-sm group-hover:bg-accent group-hover:text-white transition-colors">{idx + 1}</span>
                                 <div>
                                     <span className="text-lg font-medium text-gray-200 group-hover:text-white">{q.question}</span>
                                     <div className="flex items-center gap-2 mt-1">

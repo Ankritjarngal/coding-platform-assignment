@@ -9,31 +9,14 @@ import clsx from 'clsx';
 
 // 👇 1. DEFINE BOILERPLATE CODE TEMPLATES
 const BOILERPLATES = {
-    c: `#include <stdio.h>
-#include <stdlib.h>
-
-int main() {
-    // Write your C code here
-    return 0;
-}`,
-    cpp: `#include <bits/stdc++.h>
-using namespace std;
-
-int main() {
-    // Write your C++ code here
-    return 0;
-}`,
-    python: `import sys
-
-def solve():
-    # Write your Python code here
-
-if __name__ == '__main__':
-    solve()`,
-    javascript: `// Write your JavaScript code here`
+    c: `#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // Write your C code here\n    return 0;\n}`,
+    cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n     return 0;\n}`,
+    python: `import sys\n\ndef solve():\n    # Write your Python code here\nif __name__ == '__main__':\n    solve()`,
+    javascript: `// Write your JavaScript code here\n`
 };
 
 const Problem = () => {
+    // 👇 Ensure courseId is captured here
     const { courseId, problemId } = useParams();
     const id = problemId; 
 
@@ -74,7 +57,6 @@ const Problem = () => {
     const handleLanguageChange = (e) => {
         const newLang = e.target.value;
         setLanguage(newLang);
-        // Automatically set the code to the boilerplate for the new language
         setCode(BOILERPLATES[newLang]);
     };
 
@@ -89,9 +71,10 @@ const Problem = () => {
             const token = localStorage.getItem('token');
             if(!token) return toast.error("Please login first");
             const payload = JSON.parse(atob(token.split(".")[1]));
+            const userId = payload.user ? payload.user.id : payload.userid;
             
             const { data } = await API.post('/Solution/run', {
-                userId: payload.userid,
+                userId: userId,
                 questionId: id,
                 language,
                 solution: code
@@ -103,6 +86,7 @@ const Problem = () => {
         } finally { setIsRunning(false); }
     };
 
+    // 👇 4. UPDATED SUBMIT HANDLER (Sends courseId & userId)
     const handleSubmit = async () => {
         setIsRunning(true);
         setActiveTab('result');
@@ -112,15 +96,26 @@ const Problem = () => {
         try {
             const token = localStorage.getItem('token');
             if(!token) return toast.error("Please login first");
+            
+            // Extract User ID safely
             const payload = JSON.parse(atob(token.split(".")[1]));
+            const userId = payload.user ? payload.user.id : payload.userid;
 
             const { data } = await API.post('/Solution/submit', {
-                userId: payload.userid,
+                userId: userId,      // 👈 REQUIRED FOR SCORE
+                courseId: courseId,  // 👈 REQUIRED FOR SCORE
                 questionId: id,
                 language,
                 solution: code
             });
+            
             setSubmitResult(data);
+            
+            // Show toast if points were earned
+            if (data.score_earned !== undefined && data.score_earned > 0) {
+                toast.success(`Score earned: ${data.score_earned} points!`);
+            }
+
         } catch (err) {
             setSubmitResult({ error: err.response?.data?.error || "Server Error" });
         } finally { setIsRunning(false); }
@@ -183,7 +178,6 @@ const Problem = () => {
                             <div className="flex flex-col h-full bg-[#1e1e1e]">
                                 <div className="h-12 bg-darker border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
                                     
-                                    {/* 👇 4. UPDATED SELECT HANDLER */}
                                     <select 
                                         value={language} 
                                         onChange={handleLanguageChange} 
@@ -259,7 +253,6 @@ const Problem = () => {
                                             {/* 1. RUN RESULTS (Multi-Case) */}
                                             {!isRunning && runResults && (
                                                 <div className="w-full">
-                                                    {/* Case Tabs */}
                                                     <div className="flex gap-2 mb-4">
                                                         {runResults.map((res, idx) => (
                                                             <button 
@@ -276,7 +269,6 @@ const Problem = () => {
                                                         ))}
                                                     </div>
 
-                                                    {/* Output Details */}
                                                     {currentRunResult?.error ? (
                                                         <div className="text-red-400 bg-red-900/10 p-4 rounded border border-red-900/50">
                                                             <h4 className="font-bold mb-2 flex items-center gap-2"><AlertCircle size={16}/> Compilation / Runtime Error</h4>
@@ -307,6 +299,12 @@ const Problem = () => {
                                                             <CheckCircle size={64} className="text-green-500 mb-4" />
                                                             <h2 className="text-3xl font-bold text-green-500 mb-2">Accepted</h2>
                                                             <p className="text-gray-400 text-lg">All {submitResult.total_cases} test cases passed!</p>
+                                                            {/* Show Score if available */}
+                                                            {submitResult.score_earned !== undefined && (
+                                                                <div className="mt-2 text-accent font-bold border border-accent/50 px-3 py-1 rounded bg-accent/10">
+                                                                    + {submitResult.score_earned} Points Added
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     ) : (
                                                         <div className="w-full">

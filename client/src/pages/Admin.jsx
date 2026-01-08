@@ -172,6 +172,9 @@ const ManageQuestions = ({ courseId }) => {
 /**
  * COMPONENT: Manage Students (Enrollment, Search & Reset)
  */
+/**
+ * COMPONENT: Manage Students
+ */
 const ManageStudents = ({ courseId }) => {
     const [email, setEmail] = useState("");
     const [activeStudents, setActiveStudents] = useState([]);
@@ -179,7 +182,6 @@ const ManageStudents = ({ courseId }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     
-    // Separate loading states
     const [isAddingSingle, setIsAddingSingle] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
@@ -215,21 +217,22 @@ const ManageStudents = ({ courseId }) => {
 
     const handleManualEnroll = async () => {
         if(!email) return;
-        setIsAddingSingle(true);
+        
+        setIsAddingSingle(true); 
         try {
             await API.post('/Course/enroll', { email, courseId });
             toast.success("Processed!");
             setEmail("");
             fetchStudents(); 
         } catch (e) { toast.error(e.response?.data?.error || "Failed"); }
-        finally { setIsAddingSingle(false); }
+        finally { setIsAddingSingle(false); } 
     };
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
         if(!file) return;
         
-        setIsUploading(true);
+        setIsUploading(true); 
         const formData = new FormData();
         formData.append('file', file);
         const toastId = toast.loading("Uploading & Processing CSV...");
@@ -240,8 +243,8 @@ const ManageStudents = ({ courseId }) => {
             fetchStudents(); 
         } catch (e) { toast.error("Upload Failed", { id: toastId }); }
         finally { 
-            setIsUploading(false);
-            e.target.value = null; // Reset input
+            setIsUploading(false); 
+            e.target.value = null; 
         }
     };
 
@@ -278,12 +281,12 @@ const ManageStudents = ({ courseId }) => {
                             value={email} 
                             onChange={e=>setEmail(e.target.value)} 
                             placeholder="user@example.com" 
-                            disabled={isAddingSingle}
+                            disabled={isAddingSingle} 
                             className="bg-black border border-gray-700 p-2 rounded text-sm text-white flex-1 outline-none focus:border-accent transition-colors disabled:opacity-50"
                         />
                         <button 
                             onClick={handleManualEnroll} 
-                            disabled={isAddingSingle}
+                            disabled={isAddingSingle} 
                             className={`px-4 py-2 rounded text-sm font-bold text-white transition-colors flex items-center gap-2
                                 ${isAddingSingle ? 'bg-gray-700 cursor-not-allowed' : 'bg-accent hover:bg-blue-600'}
                             `}
@@ -351,6 +354,8 @@ const ManageStudents = ({ courseId }) => {
                                 <tr>
                                     <th className="p-4 font-medium">User Name</th>
                                     <th className="p-4 font-medium">Email</th>
+                                    {/* 👇 NEW: Score Column Header */}
+                                    <th className="p-4 font-medium">Score</th> 
                                     <th className="p-4 font-medium">Status</th>
                                     <th className="p-4 font-medium">Action</th> 
                                 </tr>
@@ -360,6 +365,13 @@ const ManageStudents = ({ courseId }) => {
                                     <tr key={student.userid} className="hover:bg-white/5 transition-colors">
                                         <td className="p-4 text-white font-medium">{student.username}</td>
                                         <td className="p-4 text-gray-300">{student.user_email}</td>
+                                        
+                                        {/* 👇 NEW: Score Data */}
+                                        <td className="p-4">
+                                            <span className="font-bold text-accent">{student.total_score || 0}</span> 
+                                            <span className="text-gray-600 text-xs"> / {student.max_score || 0}</span>
+                                        </td>
+
                                         <td className="p-4">
                                             {student.has_attempted ? (
                                                 <span className="text-red-400 bg-red-900/20 px-2 py-0.5 rounded text-xs border border-red-900/50">Attempted</span>
@@ -383,13 +395,14 @@ const ManageStudents = ({ courseId }) => {
                                     <tr key={`pending-${idx}`} className="hover:bg-white/5 transition-colors bg-yellow-500/5">
                                         <td className="p-4 text-gray-500 italic">Pending Registration</td>
                                         <td className="p-4 text-yellow-500/80">{invite.email}</td>
+                                        <td className="p-4 text-gray-600">-</td> {/* Score placeholder for pending */}
                                         <td className="p-4"><span className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded border border-yellow-500/20">Invited</span></td>
                                         <td className="p-4">-</td>
                                     </tr>
                                 ))}
                                 {filteredActive.length === 0 && filteredPending.length === 0 && (
                                     <tr>
-                                        <td colSpan="4" className="p-8 text-center text-gray-500">
+                                        <td colSpan="5" className="p-8 text-center text-gray-500">
                                             {searchQuery ? "No matching students found." : "No students enrolled yet."}
                                         </td>
                                     </tr>
@@ -402,7 +415,6 @@ const ManageStudents = ({ courseId }) => {
         </div>
     );
 };
-
 /**
  * MAIN PAGE: Admin Dashboard
  */

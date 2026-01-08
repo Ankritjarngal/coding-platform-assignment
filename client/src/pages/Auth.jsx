@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // 👈 Import useEffect
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
 import toast from 'react-hot-toast';
@@ -15,6 +15,14 @@ const Auth = ({ setAuth }) => {
     const [avatarSeed, setAvatarSeed] = useState('Felix');
     const [avatarStyle, setAvatarStyle] = useState('adventurer');
 
+    // 👇 NEW: Clear old tokens immediately when this page loads
+    useEffect(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        // Update Navbar to show "Login" button instead of "Logout"
+        window.dispatchEvent(new Event('authUpdated')); 
+    }, []);
+
     const onChange = (e) => setInputs({ ...inputs, [e.target.name]: e.target.value });
 
     // Generate current avatar URL
@@ -25,7 +33,6 @@ const Auth = ({ setAuth }) => {
         setIsLoading(true);
         const endpoint = isLogin ? '/auth/login' : '/auth/register';
         
-        // Include Avatar in Register Body
         const body = isLogin 
             ? { email: inputs.email, password: inputs.password } 
             : { email: inputs.email, password: inputs.password, name: inputs.name, avatar: currentAvatarUrl };
@@ -36,7 +43,6 @@ const Auth = ({ setAuth }) => {
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
             
-            // 👇 Dispatches event so Navbar updates instantly
             window.dispatchEvent(new Event('authUpdated')); 
             
             if (setAuth) setAuth(true);

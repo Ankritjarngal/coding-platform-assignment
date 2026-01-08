@@ -10,9 +10,9 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     
-    // 👇 NEW: State to control the Custom Popup
-    const [confirmModal, setConfirmModal] = useState(null); // Stores the course object waiting for confirmation
-    const [isStarting, setIsStarting] = useState(false); // Loading state for the "Start" button
+    // Custom Modal State
+    const [confirmModal, setConfirmModal] = useState(null); 
+    const [isStarting, setIsStarting] = useState(false); 
 
     const navigate = useNavigate();
 
@@ -45,19 +45,18 @@ const Home = () => {
 
     // 1. Handle Card Click
     const handleCourseClick = (course) => {
-        // A. Admins & Public Courses -> Go Immediately
-        if (isAdmin || course.is_public) {
+        if (isAdmin) {
             navigate(`/course/${course.course_id}`);
             return;
         }
 
-        // B. Locked Courses -> Block
+        // Block if locked
         if (course.has_attempted) {
-            toast.error("Assessment Locked: You have already attempted this private course.");
+            toast.error("Assessment Locked: You have already attempted this course.");
             return;
         }
 
-        // C. Private & Not Attempted -> OPEN CUSTOM MODAL
+        // Open Modal
         setConfirmModal(course);
     };
 
@@ -80,17 +79,11 @@ const Home = () => {
             navigate(`/course/${confirmModal.course_id}`);
         } catch (err) {
             toast.error("Server Error: Could not start course.");
-            console.error(err);
             setIsStarting(false);
         }
     };
 
-    if (loading) return (
-        <div className="flex justify-center items-center h-[calc(100vh-80px)] bg-black text-gray-400">
-            <Loader2 className="animate-spin mr-2" /> Loading...
-        </div>
-    );
-
+    if (loading) return <div className="flex justify-center items-center h-[calc(100vh-80px)] bg-black text-gray-400"><Loader2 className="animate-spin mr-2" /> Loading...</div>;
     if (isAdmin) return <Admin />;
 
     return (
@@ -119,42 +112,52 @@ const Home = () => {
                                     }
                                 `}
                             >
+                                {/* Progress Bar / Header Line */}
                                 <div className={`h-2 w-full ${isLocked ? 'bg-red-900' : 'bg-gradient-to-r from-blue-900 to-accent'}`}></div>
                                 
                                 <div className="p-6">
                                     <div className="flex justify-between items-start mb-4">
+                                        
+                                        {/* Icon Box */}
                                         <div className={`p-3 rounded-lg border text-white transition-colors
                                             ${isLocked ? 'bg-red-900/20 border-red-900/50' : 'bg-black border-gray-800 text-accent group-hover:bg-accent'}
                                         `}>
                                             {isLocked ? <Lock size={24} /> : <BookOpen size={24} />}
                                         </div>
                                         
-                                        {course.is_public ? (
-                                            <div className="bg-blue-900/30 text-blue-400 text-xs px-2 py-1 rounded font-bold border border-blue-900/50 flex items-center gap-1">
-                                                <Globe size={12}/> PUBLIC
-                                            </div>
-                                        ) : isLocked ? (
-                                            <div className="bg-red-900/30 text-red-400 text-xs px-2 py-1 rounded font-bold border border-red-900/50 flex items-center gap-1">
-                                                LOCKED
-                                            </div>
-                                        ) : (
-                                            <div className="bg-yellow-900/30 text-yellow-400 text-xs px-2 py-1 rounded font-bold border border-yellow-900/50 flex items-center gap-1">
-                                                PRIVATE
-                                            </div>
-                                        )}
+                                        {/* 👇 MERGED: SCORE DISPLAY 👇 */}
+                                        <div className="text-right">
+                                             <div className="text-xl font-bold text-white">
+                                                {course.user_score || 0} <span className="text-gray-500 text-sm">/ {course.total_max_score || 0}</span>
+                                             </div>
+                                             <div className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Score</div>
+                                        </div>
                                     </div>
                                     
                                     <h3 className="text-xl font-bold text-white mb-2">{course.title}</h3>
                                     <p className="text-gray-400 text-sm line-clamp-2 h-10">{course.description}</p>
                                     
-                                    <div className="mt-4 pt-4 border-t border-gray-800 text-xs text-gray-500 flex items-center gap-2">
+                                    {/* Footer Badges */}
+                                    <div className="mt-4 pt-4 border-t border-gray-800 text-xs text-gray-500 flex items-center justify-between">
+                                        
+                                        {/* Access Status */}
+                                        <span className="flex items-center gap-2">
+                                            {isLocked ? (
+                                                <>Contact admin</>
+                                            ) : course.is_public ? (
+                                                <><PlayCircle size={14}/> Open Access</>
+                                            ) : (
+                                                <><Lock size={14}/> One-Time Exam</>
+                                            )}
+                                        </span>
+
+                                        {/* Status Badge */}
                                         {isLocked ? (
-                                            <>Contact admin to reset attempt</>
-                                        ) : course.is_public ? (
-                                            <><PlayCircle size={14}/> Unlimited Access</>
+                                            <span className="text-red-500 font-bold bg-red-900/20 px-2 py-0.5 rounded border border-red-900/30">LOCKED</span>
                                         ) : (
-                                            <><Lock size={14}/> One-Time Assessment</>
+                                            <span className="text-green-500 font-bold bg-green-900/20 px-2 py-0.5 rounded border border-green-900/30">AVAILABLE</span>
                                         )}
+
                                     </div>
                                 </div>
                             </div>
@@ -179,7 +182,7 @@ const Home = () => {
                             <div className="h-16 w-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4 border border-red-500/20">
                                 <AlertTriangle className="h-8 w-8 text-red-500" />
                             </div>
-                            <h3 className="text-xl font-bold text-white">One-Time Assessment</h3>
+                            <h3 className="text-xl font-bold text-white">Start Assessment?</h3>
                         </div>
 
                         {/* Modal Body */}
@@ -190,9 +193,9 @@ const Home = () => {
                             
                             <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-3 text-left">
                                 <ul className="text-xs text-red-200 space-y-2 list-disc list-inside">
-                                    <li>This is a <b>Private Exam</b>.</li>
+                                    <li>This is a <b>Timed / One-Time Exam</b>.</li>
                                     <li>Once started, you <b>cannot restart</b>.</li>
-                                    <li>If you close the window, you may be locked out.</li>
+                                    <li>Do not close the window until finished.</li>
                                 </ul>
                             </div>
                         </div>

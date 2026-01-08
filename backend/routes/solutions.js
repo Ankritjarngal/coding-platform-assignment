@@ -18,7 +18,6 @@ async function fetch_testcases(questionId) {
     let tcs = rows[0].testcases;
     if (typeof tcs === 'string') tcs = JSON.parse(tcs);
     
-    // Handle old format (array) vs new format (object)
     if (Array.isArray(tcs)) {
         return { examples: tcs.slice(0, 3), hidden: tcs.slice(3) };
     }
@@ -26,18 +25,13 @@ async function fetch_testcases(questionId) {
 }
 
 // --- Docker Command Generator ---
-// ... imports
-
-// 1. UPDATE THIS FUNCTION
 function getDockerCommand(language, codeFilePath, inputFilePath) {
     const langMap = {
-        // NEW: C Language Support
         c: {
             image: 'gcc',
-            compile: `gcc ${codeFilePath} -o /app/a.out`, // Using gcc compiler
+            compile: `gcc ${codeFilePath} -o /app/a.out`,
             run: `/app/a.out < ${inputFilePath}`
         },
-        // Existing...
         cpp: { 
             image: 'gcc', 
             compile: `g++ ${codeFilePath} -o /app/a.out`, 
@@ -65,18 +59,14 @@ function getDockerCommand(language, codeFilePath, inputFilePath) {
     return `${base} sh -c "${langConfig.run}"`;
 }
 
-// 2. UPDATE THIS FUNCTION
 async function runCodeInDocker({ language, solution, testcaseInput }) {
     const uid = uuidv4();
     const tempDir = path.join(process.cwd(), 'temp');
     
-    // NEW: Add 'c': 'c' mapping here
     const extensionMap = { c: 'c', cpp: 'cpp', python: 'py', javascript: 'js' };
-    
     const ext = extensionMap[language.toLowerCase()];
     if (!ext) throw new Error('Unsupported language');
 
-    // ... rest of the function remains exactly the same ...
     const codeFileName = `code-${uid}.${ext}`;
     const inputFileName = `input-${uid}.txt`;
     
@@ -88,16 +78,13 @@ async function runCodeInDocker({ language, solution, testcaseInput }) {
         await fs.writeFile(codeFilePath, solution);
         await fs.writeFile(inputFilePath, testcaseInput || "");
 
-        // Increase timeout slightly for compilation
         const command = getDockerCommand(language, `/app/${codeFileName}`, `/app/${inputFileName}`);
         
-        console.log(`🐳 [Running] ${language} | File: ${codeFileName}`);
+        // 10s Timeout
         const { stdout, stderr } = await execAsync(command, { timeout: 10000 });
         
         return { output: stdout.trim(), error: stderr.trim() || null };
     } catch (err) {
-        console.error("❌ [Execution Failed]");
-        console.error("👉 STDERR:", err.stderr); 
         return { output: "", error: err.stderr || err.message };
     } finally {
         try {
@@ -108,28 +95,19 @@ async function runCodeInDocker({ language, solution, testcaseInput }) {
 }
 
 // --- Endpoint: Run (Examples Only) ---
-// --- Endpoint: Run (All Example Cases) ---
 router.post('/run', async (req, res) => {
     const { language, solution, questionId } = req.body;
     try {
         const tcs = await fetch_testcases(questionId);
         if (!tcs) return res.status(404).json({ error: "Question not found" });
 
-        // Get all example cases (max 3)
         const exampleCases = tcs.examples || [];
         if (exampleCases.length === 0) return res.status(400).json({ error: "No example cases found" });
 
         const results = [];
 
-        // Loop through all examples
         for (const tc of exampleCases) {
-            const result = await runCodeInDocker({
-                language,
-                solution,
-                testcaseInput: tc.input
-            });
-
-            // Compare Logic
+            const result = await runCodeInDocker({ language, solution, testcaseInput: tc.input });
             const passed = result.output.trim() === tc.expected_output.trim();
             
             results.push({
@@ -141,31 +119,41 @@ router.post('/run', async (req, res) => {
             });
         }
 
-        res.json({ results }); // Return array of results
+        res.json({ results }); 
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// --- Endpoint: Submit (All Cases) ---
+// --- Endpoint: Submit (Calculates Score) ---
 router.post('/submit', async (req, res) => {
-    const { questionId, language, solution } = req.body;
+    const { questionId, language, solution, userId, courseId } = req.body;
+
     try {
         const tcs = await fetch_testcases(questionId);
         if (!tcs) return res.status(404).json({ error: 'Question not found' });
 
-        const allCases = [...(tcs.examples || []), ...(tcs.hidden || [])];
+        const exampleCases = tcs.examples || [];
+        const hiddenCases = tcs.hidden || [];
+        const allCases = [...exampleCases, ...hiddenCases];
+
         if(allCases.length === 0) return res.status(400).json({ error: "No test cases found" });
 
         const results = [];
         let allPassed = true;
+        let hiddenPassedCount = 0; // Points Counter
 
-        for (const tc of allCases) {
+        for (let i = 0; i < allCases.length; i++) {
+            const tc = allCases[i];
             const result = await runCodeInDocker({ language, solution, testcaseInput: tc.input });
             
-            // Compare Output
             const passed = result.output.trim() === tc.expected_output.trim();
             if (!passed) allPassed = false;
+
+            // SCORING: Only count if it's a HIDDEN case (index >= number of examples)
+            if (i >= exampleCases.length && passed) {
+                hiddenPassedCount++;
+            }
 
             results.push({
                 input: tc.input,
@@ -175,18 +163,29 @@ router.post('/submit', async (req, res) => {
                 error: result.error
             });
             
-            // Stop processing if one fails (LeetCode style)
-            if(!passed) break; 
+            // NOTE: We do NOT break loop so we can calculate partial score
+        }
+
+        // SAVE SCORE TO DATABASE
+        if (userId && courseId) {
+            await db.query(`
+                INSERT INTO solved_questions (user_id, question_id, course_id, points)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (user_id, question_id) 
+                DO UPDATE SET points = GREATEST(solved_questions.points, EXCLUDED.points);
+            `, [userId, questionId, courseId, hiddenPassedCount]);
         }
         
         res.json({ 
             status: allPassed ? "Accepted" : "Wrong Answer",
             total_cases: allCases.length,
-            passed_cases: results.length - (allPassed ? 0 : 1), 
-            failed_case: allPassed ? null : results[results.length - 1]
+            passed_cases: results.filter(r => r.passed).length,
+            failed_case: allPassed ? null : results.find(r => !r.passed),
+            score_earned: hiddenPassedCount 
         });
 
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
 });

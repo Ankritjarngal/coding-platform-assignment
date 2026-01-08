@@ -1,30 +1,30 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3000', // Ensure this matches your backend port
 });
 
-// 1. Request Interceptor: Attaches token to every outgoing request
+// 1. Interceptor to add Token to every request
 API.interceptors.request.use((req) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        req.headers.token = token;
+    if (localStorage.getItem('token')) {
+        req.headers.token = localStorage.getItem('token');
     }
     return req;
 });
 
-// 2. Response Interceptor: Catches 401/403 errors globally
+// 2. 👇 NEW: Interceptor to handle Expired Tokens automatically
 API.interceptors.response.use(
-    (response) => response, // If success, just return response
+    (response) => response, // Return success responses as is
     (error) => {
-        // If Backend says "Unauthorized" (401) or "Forbidden" (403)
+        // If the backend says "Unauthorized" (401) or "Forbidden" (403)
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             
-            // Only redirect if we are not already on the auth page (prevents loops)
-            if (window.location.pathname !== '/auth') {
-                localStorage.clear(); // Wipe bad credentials
-                window.location.href = '/auth'; // Hard redirect to login
-            }
+            // Clear the bad token
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            
+            // Redirect to Auth page
+            window.location.href = '/auth';
         }
         return Promise.reject(error);
     }
