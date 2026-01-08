@@ -35,7 +35,7 @@ const CourseView = () => {
             <div className="space-y-3">
                 {course.questions && course.questions.length > 0 ? (
                     course.questions.map((q, idx) => (
-                        <Link to={`/problem/${q.quesid}`} key={q.quesid} className="group flex justify-between items-center bg-darker p-5 rounded-xl border border-gray-800 hover:border-accent hover:bg-gray-800/50 transition-all">
+                        <Link to={`/solve/${id}/${q.quesid}`} key={q.quesid} className="group flex justify-between items-center bg-darker p-5 rounded-xl border border-gray-800 hover:border-accent hover:bg-gray-800/50 transition-all">
                             <div className="flex items-center gap-4">
                                 <span className="flex items-center justify-center w-8 h-8 rounded bg-gray-800 text-gray-400 font-mono text-sm group-hover:bg-accent group-hover:text-white transition-colors">{idx + 1}</span>
                                 <div>

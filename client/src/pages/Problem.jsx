@@ -8,7 +8,8 @@ import { Play, CheckCircle, Terminal, AlertCircle, Loader2, Dot } from 'lucide-r
 import clsx from 'clsx';
 
 const Problem = () => {
-    const { id } = useParams();
+    const { problemId } = useParams(); // Must match :problemId from App.js
+const id = problemId;
     const [question, setQuestion] = useState(null);
     const [code, setCode] = useState("// Write your code here...");
     const [language, setLanguage] = useState("c");

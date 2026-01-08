@@ -1,36 +1,87 @@
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
-
-
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+// Pages
 import Auth from './pages/Auth';
 import Home from './pages/Home';
 import Admin from './pages/Admin';
-import CourseView from './pages/CourseView'; // <--- Make sure you import this!
-import ProblemView from './pages/Problem'; // Assuming you have this for questions
-import { Toaster } from 'react-hot-toast';
+import CourseView from './pages/CourseView';
+import Profile from './pages/Profile';
+import SolveProblem from './pages/Problem'; // 👈 1. IMPORT THIS
+
+// Components
 import Navbar from './components/Navbar';
-import AdminRoute from './components/AdminRoute';
+import AdminRoute from './components/AdminRoute'; 
+
+// --- ROUTE GUARDS ---
+const RequireAuth = ({ children }) => {
+    const token = localStorage.getItem('token');
+    return token ? children : <Navigate to="/auth" replace />;
+};
+
+const RequireGuest = ({ children }) => {
+    const token = localStorage.getItem('token');
+    return token ? <Navigate to="/" replace /> : children;
+};
+
+const AppLayout = ({ children }) => {
+    const location = useLocation();
+    const showNavbar = location.pathname !== '/auth';
+    return (
+        <>
+            {showNavbar && <Navbar />}
+            {children}
+        </>
+    );
+};
+
 function App() {
   return (
     <BrowserRouter>
-          <div className="min-h-screen bg-black text-gray-200 font-sans">
-          <Toaster position="top-right" />
-          <Navbar />
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        
-        {/* Protected Routes */}
-        <Route path="/" element={<Home />} />
-        <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<Admin />} />
-        </Route>        
-        {/* 👇 THIS IS THE MISSING ROUTE 👇 */}
-        <Route path="/course/:id" element={<CourseView />} />
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+      
+      <AppLayout>
+          <Routes>
+            <Route path="/auth" element={
+                <RequireGuest>
+                    <Auth />
+                </RequireGuest>
+            } />
+            
+            <Route path="/" element={
+                <RequireAuth>
+                    <Home />
+                </RequireAuth>
+            } />
 
-        {/* You likely also need this for individual questions */}
-        <Route path="/problem/:id" element={<ProblemView />} /> 
-      </Routes>
-      </div>
+            <Route path="/course/:id" element={
+                <RequireAuth>
+                    <CourseView />
+                </RequireAuth>
+            } />
+            
+            {/* 👇 2. ADD THIS MISSING ROUTE 👇 */}
+            <Route path="/solve/:courseId/:problemId" element={
+                <RequireAuth>
+                    <SolveProblem />
+                </RequireAuth>
+            } />
+
+            <Route path="/profile" element={
+                <RequireAuth>
+                    <Profile />
+                </RequireAuth>
+            } />
+
+            <Route element={<AdminRoute />}>
+                <Route path="/admin" element={<Admin />} />
+            </Route>
+            
+            {/* Catch-all: This was sending you back to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+
+          </Routes>
+      </AppLayout>
     </BrowserRouter>
   );
 }

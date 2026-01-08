@@ -2,105 +2,141 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
 import toast from 'react-hot-toast';
+import { Mail, Lock, User, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
 
-const Auth = () => {
+const Auth = ({ setAuth }) => {
     const [isLogin, setIsLogin] = useState(true);
-    // State matches backend expectations: name, email, password
-    const [form, setForm] = useState({ name: '', email: '', password: '' });
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
+    const [inputs, setInputs] = useState({ email: '', password: '', name: '' });
+    
+    // Avatar state
+    const [avatarSeed, setAvatarSeed] = useState('Felix');
+    const [avatarStyle, setAvatarStyle] = useState('adventurer');
 
-    const handleSubmit = async (e) => {
+    const onChange = (e) => setInputs({ ...inputs, [e.target.name]: e.target.value });
+
+    // Generate current avatar URL
+    const currentAvatarUrl = `https://api.dicebear.com/9.x/${avatarStyle}/svg?seed=${avatarSeed}`;
+
+    const onSubmitForm = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         const endpoint = isLogin ? '/auth/login' : '/auth/register';
         
-        try {
-            const { data } = await API.post(endpoint, form);
-            
-            if (isLogin) {
-                // Login Success
-                localStorage.setItem('token', data.token);
-                
-                // SAVE THE ROLE TO LOCALSTORAGE
-                localStorage.setItem('role', data.role); 
+        // Include Avatar in Register Body
+        const body = isLogin 
+            ? { email: inputs.email, password: inputs.password } 
+            : { email: inputs.email, password: inputs.password, name: inputs.name, avatar: currentAvatarUrl };
 
-                toast.success('Welcome back!');
-                navigate('/');
-            } else {
-                // Register Success
-                toast.success('Account created! Please login.');
-                setIsLogin(true);
-            }
+        try {
+            const { data } = await API.post(endpoint, body);
+            
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('role', data.role);
+            
+            // 👇 Dispatches event so Navbar updates instantly
+            window.dispatchEvent(new Event('authUpdated')); 
+            
+            if (setAuth) setAuth(true);
+            toast.success(isLogin ? "Welcome back!" : "Account Created!");
+            navigate('/');
         } catch (err) {
-            const msg = err.response?.data || 'Something went wrong';
-            toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            console.error(err);
+            toast.error(err.response?.data || "Authentication Failed");
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <div className="flex justify-center items-center h-[calc(100vh-80px)]">
-            <div className="w-full max-w-md bg-darker p-8 rounded-xl border border-gray-800 shadow-2xl">
-                <h2 className="text-2xl font-bold mb-6 text-center text-white">
-                    {isLogin ? 'Login to CodeJudge' : 'Create Account'}
-                </h2>
+        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-darker border border-gray-800 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in-95">
                 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    
-                    {/* Name Input (Only for Register) */}
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-white mb-2">{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
+                    <p className="text-gray-400 text-sm">
+                        {isLogin ? 'Enter your credentials to access your account' : 'Sign up to start your coding journey'}
+                    </p>
+                </div>
+
+                {/* Avatar Selection (Only on Register) */}
+                {!isLogin && (
+                    <div className="flex flex-col items-center mb-6">
+                        <div className="relative group cursor-pointer" onClick={() => setAvatarSeed(Math.random().toString(36).substring(7))}>
+                            <img 
+                                src={currentAvatarUrl} 
+                                alt="Avatar Preview" 
+                                className="w-20 h-20 rounded-full bg-black border-2 border-accent shadow-lg shadow-accent/20 transition-transform group-hover:scale-105"
+                            />
+                            <div className="absolute bottom-0 right-0 bg-accent text-white p-1 rounded-full shadow-md">
+                                <RefreshCw size={12} />
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Click image to randomize</p>
+                    </div>
+                )}
+
+                <form onSubmit={onSubmitForm} className="space-y-4">
                     {!isLogin && (
-                        <input
-                            type="text"
-                            name="name"
-                            placeholder="Full Name"
-                            value={form.name}
-                            onChange={handleChange}
-                            className="p-3 rounded bg-black border border-gray-700 text-white focus:border-accent outline-none"
-                            required
-                        />
+                        <div className="relative">
+                            <User className="absolute left-3 top-3.5 text-gray-500" size={18} />
+                            <input
+                                type="text"
+                                name="name"
+                                placeholder="Full Name"
+                                value={inputs.name}
+                                onChange={onChange}
+                                className="w-full bg-black border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white focus:border-accent outline-none transition-colors"
+                                required
+                            />
+                        </div>
                     )}
 
-                    {/* Email Input */}
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email Address"
-                        value={form.email}
-                        onChange={handleChange}
-                        className="p-3 rounded bg-black border border-gray-700 text-white focus:border-accent outline-none"
-                        required
-                    />
+                    <div className="relative">
+                        <Mail className="absolute left-3 top-3.5 text-gray-500" size={18} />
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Email Address"
+                            value={inputs.email}
+                            onChange={onChange}
+                            className="w-full bg-black border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white focus:border-accent outline-none transition-colors"
+                            required
+                        />
+                    </div>
 
-                    {/* Password Input */}
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        value={form.password}
-                        onChange={handleChange}
-                        className="p-3 rounded bg-black border border-gray-700 text-white focus:border-accent outline-none"
-                        required
-                    />
+                    <div className="relative">
+                        <Lock className="absolute left-3 top-3.5 text-gray-500" size={18} />
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Password"
+                            value={inputs.password}
+                            onChange={onChange}
+                            className="w-full bg-black border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white focus:border-accent outline-none transition-colors"
+                            required
+                        />
+                    </div>
 
-                    <button className="bg-accent p-3 rounded font-bold text-white hover:bg-blue-600 transition">
-                        {isLogin ? 'Login' : 'Register'}
+                    <button 
+                        type="submit" 
+                        disabled={isLoading}
+                        className="w-full bg-accent hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoading ? <Loader2 className="animate-spin" /> : <>{isLogin ? 'Sign In' : 'Sign Up'} <ArrowRight size={18} /></>}
                     </button>
                 </form>
 
-                <p className="mt-4 text-center text-gray-400 text-sm">
-                    {isLogin ? "Don't have an account? " : "Already have an account? "}
-                    <span 
-                        onClick={() => {
-                            setIsLogin(!isLogin);
-                            setForm({ name: '', email: '', password: '' }); 
-                        }} 
-                        className="text-accent cursor-pointer hover:underline"
+                <div className="mt-6 text-center">
+                    <button 
+                        onClick={() => setIsLogin(!isLogin)} 
+                        className="text-gray-400 text-sm hover:text-white transition-colors"
                     >
-                        {isLogin ? 'Register' : 'Login'}
-                    </span>
-                </p>
+                        {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Sign In"}
+                    </button>
+                </div>
             </div>
         </div>
     );
