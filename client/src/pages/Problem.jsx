@@ -91,7 +91,7 @@ const Problem = () => {
                 // Warning Toast
                 toast.custom((t) => (
                     <div className="bg-red-600 text-white p-4 rounded-lg shadow-2xl flex items-center gap-3 animate-bounce">
-                        <AlertTriangle size={24} /><div><h3 className="font-bold">⚠️ PROCTOR WARNING {newWarnings}/2</h3><p className="text-sm">Do not switch tabs or minimize!</p></div>
+                        <AlertTriangle size={24} /><div><h3 className="font-bold">PROCTOR WARNING {newWarnings}/2</h3><p className="text-sm">Do not switch tabs or minimize!</p></div>
                     </div>
                 ), { duration: 4000 });
                 

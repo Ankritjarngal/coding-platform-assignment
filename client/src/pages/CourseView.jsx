@@ -43,12 +43,12 @@ const CourseView = () => {
     const handleAssignmentClick = (assign) => {
         // 1. Check Disqualification
         if (assign.is_disqualified) {
-            return toast.error("⛔ Access Denied: You have been disqualified.");
+            return toast.error("Access Denied: You have been disqualified.");
         }
 
         // 2. Check if already attempted
         if (assign.has_attempted) {
-             return toast.error("🔒 You have already completed this assignment.");
+             return toast.error("You have already completed this assignment.");
         }
 
         // 3. Open Confirmation Modal

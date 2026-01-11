@@ -380,7 +380,6 @@ const ManageAssignments = ({ courseId, onBack }) => {
                                     <span className="flex items-center gap-1.5">
                                         <Clock size={14} /> {a.duration_minutes} mins
                                     </span>
-                                    {/* 👇 NEW: ID BADGE for Easy Reset */}
                                     <span 
                                         className="flex items-center gap-1 bg-gray-800 border border-gray-700 text-gray-400 px-2 py-0.5 rounded text-[10px] font-mono cursor-copy hover:text-white"
                                         onClick={(e) => {
