@@ -7,6 +7,7 @@ import authRoutes from './routes/user.js';
 import questionRoutes from './routes/questions.js';
 import solutionRoutes from './routes/solutions.js';
 import courseRoutes from './routes/course.js';
+import assignmentRoutes from './routes/assignment.js';
 
 dotenv.config();
 
@@ -16,8 +17,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Use Routes
-app.use('/auth', authRoutes);
+app.use('/auth', authRoutes); 
+
+app.use('/Assignment', assignmentRoutes); 
 app.use('/Question', questionRoutes);
 app.use('/Solution', solutionRoutes);
 app.use('/Course', courseRoutes); 
@@ -30,3 +32,5 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+

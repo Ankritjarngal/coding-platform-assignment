@@ -22,26 +22,26 @@ router.get('/question', async (req, res) => {
     }
 });
 
-// --- ADD QUESTION (Updated with courseId) ---
-router.post('/input', async (req, res) => {
-    const { question, category, testcases, courseId } = req.body;
+// ... imports
 
-    if (!question || !testcases || !courseId) {
-        return res.status(400).json({ error: "Missing required fields (question, testcases, courseId)" });
-    }
+// Create Question (Now links to Assignment)
+router.post('/input', async (req, res) => {
+    const { assignmentId, question, category, testcases } = req.body; // 👈 assignmentId is required now
 
     try {
-        const query = `
-            INSERT INTO questions (question, category, testcases, course_id) 
-            VALUES ($1, $2, $3, $4) RETURNING *
-        `;
-        const { rows } = await db.query(query, [question, category, testcases, courseId]);
-        res.json(rows[0]);
+        const result = await db.query(
+            "INSERT INTO questions (assignment_id, question, category, testcases) VALUES ($1, $2, $3, $4) RETURNING *",
+            [assignmentId, question, category, testcases]
+        );
+        res.json({ message: "Question added successfully", question: result.rows[0] });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
 });
 
+// ... (Generate AI and Get Question endpoints remain mostly the same)
+// Just ensure 'Get Question' doesn't fail. The query 'SELECT * FROM questions WHERE quesid = $1' works regardless of parent.
 // --- GENERATE AI TEST CASES ---
 router.post('/generate-testcases', async (req, res) => {
     const { description, category, existingTestCases } = req.body;

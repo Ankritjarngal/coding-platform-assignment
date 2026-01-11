@@ -1,58 +1,120 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import API from '../api';
 import toast from 'react-hot-toast';
-import { Play, CheckCircle, Terminal, AlertCircle, Loader2, Dot, ArrowLeft } from 'lucide-react';
+import { Play, CheckCircle, Terminal, AlertCircle, Loader2, Dot, ArrowLeft, Lock, AlertTriangle } from 'lucide-react';
 import clsx from 'clsx';
 
 // DEFINE BOILERPLATE CODE TEMPLATES
 const BOILERPLATES = {
-    c: `#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // Write your C code here\n    return 0;\n}`,
-    cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n     return 0;\n}`,
-    python: `import sys\n\ndef solve():\n    # Write your Python code here\nif __name__ == '__main__':\n    solve()`,
-    javascript: `// Write your JavaScript code here\n`
+    c: `#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // Write your C code here\n    printf("Hello World");\n    return 0;\n}`,
+    cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    cout << "Hello World";\n    return 0;\n}`,
+    python: `import sys\n\ndef solve():\n    # Write your Python code here\n    print("Hello World")\n\nif __name__ == '__main__':\n    solve()`,
+    javascript: `// Write your JavaScript code here\nconsole.log("Hello World");`
 };
 
 const Problem = () => {
-    const { courseId, problemId } = useParams();
+    // 1. UPDATE: Capture assignmentId from URL
+    const { assignmentId, problemId } = useParams();
     const id = problemId; 
+    const navigate = useNavigate();
 
     const [question, setQuestion] = useState(null);
+    const [parentCourseId, setParentCourseId] = useState(null); // To link back
+    
     const [language, setLanguage] = useState("c");
     const [code, setCode] = useState(BOILERPLATES["c"]); 
-    
     const [isRunning, setIsRunning] = useState(false);
-
+    
     const [activeTab, setActiveTab] = useState('testcase'); 
     const [activeCaseIndex, setActiveCaseIndex] = useState(0); 
-    
     const [runResults, setRunResults] = useState(null); 
     const [submitResult, setSubmitResult] = useState(null);
 
+    // 🔒 PROCTORING STATE
+    const [warnings, setWarnings] = useState(0);
+    const [isDisqualified, setIsDisqualified] = useState(false);
+    const hasFetchedStatus = useRef(false);
+
     useEffect(() => {
-        const fetchQ = async () => {
+        const init = async () => {
             try {
+                const token = localStorage.getItem('token');
+                if(!token) return;
+                const payload = JSON.parse(atob(token.split(".")[1]));
+                const userId = payload.user ? payload.user.id : payload.userid;
+
+                // A. Check Proctor Status (Using Assignment API)
+                if (!hasFetchedStatus.current) {
+                    const statusRes = await API.get(`/Assignment/status/${assignmentId}/${userId}`);
+                    setWarnings(statusRes.data.warnings_count || 0);
+                    setIsDisqualified(statusRes.data.is_disqualified || false);
+                    hasFetchedStatus.current = true;
+                }
+
+                // B. Fetch Question & Parent Course Info
+                // We fetch assignment details to get the course_id for the back button
+                const assignRes = await API.get(`/Assignment/${assignmentId}`);
+                if (assignRes.data) {
+                    setParentCourseId(assignRes.data.course_id);
+                }
+
                 const { data } = await API.get(`/Question/question?id=${id}`);
                 let parsed = null;
                 try {
                     parsed = typeof data.testcases === 'string' ? JSON.parse(data.testcases) : data.testcases;
-                    if (Array.isArray(parsed)) {
-                        parsed = { examples: parsed.slice(0,3), hidden: parsed.slice(3) };
-                    }
+                    if (Array.isArray(parsed)) parsed = { examples: parsed.slice(0,3), hidden: parsed.slice(3) };
                 } catch (e) { console.error("Parse error", e); }
-                
                 setQuestion({ ...data, parsedTestCases: parsed });
-            } catch (err) { toast.error("Failed to load problem"); }
+
+            } catch (err) { toast.error("Failed to load data"); }
         };
-        fetchQ();
-    }, [id]);
+        init();
+    }, [id, assignmentId]);
+
+    // 🔒 PROCTORING WATCHDOG (Event Listeners)
+    useEffect(() => {
+        if (isDisqualified) return;
+
+        const handleViolation = async () => {
+            const token = localStorage.getItem('token');
+            if(!token) return;
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            const userId = payload.user ? payload.user.id : payload.userid;
+
+            let newWarnings = warnings + 1;
+            setWarnings(newWarnings);
+
+            if (newWarnings < 3) {
+                // Warning Toast
+                toast.custom((t) => (
+                    <div className="bg-red-600 text-white p-4 rounded-lg shadow-2xl flex items-center gap-3 animate-bounce">
+                        <AlertTriangle size={24} /><div><h3 className="font-bold">⚠️ PROCTOR WARNING {newWarnings}/2</h3><p className="text-sm">Do not switch tabs or minimize!</p></div>
+                    </div>
+                ), { duration: 4000 });
+                
+                // Report to Backend
+                await API.post('/Assignment/report-violation', { userId, assignmentId, action: 'warn' });
+            } else {
+                // Disqualify
+                setIsDisqualified(true);
+                await API.post('/Assignment/report-violation', { userId, assignmentId, action: 'disqualify' });
+            }
+        };
+
+        const onVisibilityChange = () => { if (document.hidden) handleViolation(); };
+        const onBlur = () => { if (document.activeElement.tagName !== "IFRAME") handleViolation(); };
+
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        window.addEventListener("blur", onBlur);
+        return () => { document.removeEventListener("visibilitychange", onVisibilityChange); window.removeEventListener("blur", onBlur); };
+    }, [warnings, isDisqualified, assignmentId]);
 
     const handleLanguageChange = (e) => {
-        const newLang = e.target.value;
-        setLanguage(newLang);
-        setCode(BOILERPLATES[newLang]);
+        setLanguage(e.target.value);
+        setCode(BOILERPLATES[e.target.value]);
     };
 
     const handleRun = async () => {
@@ -95,15 +157,14 @@ const Problem = () => {
             const userId = payload.user ? payload.user.id : payload.userid;
 
             const { data } = await API.post('/Solution/submit', {
-                userId: userId,      
-                courseId: courseId,  
+                userId: userId,
+                courseId: assignmentId, // 👈 Passing assignmentId as the context ID
                 questionId: id,
                 language,
                 solution: code
             });
             
             setSubmitResult(data);
-            
             if (data.score_earned !== undefined && data.score_earned > 0) {
                 toast.success(`Score earned: ${data.score_earned} points!`);
             }
@@ -119,22 +180,66 @@ const Problem = () => {
         </div>
     );
 
+    // 🔒 LOCKOUT SCREEN (If disqualified)
+    if (isDisqualified) {
+        return (
+            <div className="h-screen w-full bg-black flex flex-col items-center justify-center text-white p-8 text-center animate-in zoom-in-95 duration-300">
+                <div className="bg-darker p-8 rounded-2xl border border-red-900/50 max-w-lg shadow-2xl">
+                    <Lock size={60} className="text-red-500 mb-6 mx-auto" />
+                    <h1 className="text-3xl font-bold mb-3">Assignment Locked</h1>
+                    <p className="text-gray-400 mb-6">
+                        You have been disqualified from this assignment due to a proctoring violation (switching tabs/windows).
+                    </p>
+                    <div className="bg-black p-4 rounded border border-gray-800 mb-8 text-left">
+                        <p className="text-gray-500 text-xs uppercase font-bold mb-1">Status</p>
+                        <p className="text-red-400 font-mono text-sm">VIOLATION_DETECTED</p>
+                    </div>
+                    {parentCourseId ? (
+                        <Link to={`/course/${parentCourseId}`} className="block w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors">
+                            Back to Course
+                        </Link>
+                    ) : (
+                        <Link to="/" className="block w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors">
+                            Back to Dashboard
+                        </Link>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     const currentRunResult = runResults ? runResults[activeCaseIndex] : null;
 
     return (
-        <div className="h-[calc(100vh-64px)] w-full bg-black overflow-hidden">
+        <div className="h-[calc(100vh-64px)] w-full bg-black overflow-hidden relative">
+            
+            {/* Warning Banner */}
+            {warnings > 0 && (
+                <div className="absolute top-0 left-0 w-full h-1 bg-red-600 z-50 animate-pulse" title={`Warnings: ${warnings}/2`}></div>
+            )}
+
             <PanelGroup direction="horizontal">
                 
                 <Panel defaultSize={35} minSize={20}>
                     <div className="bg-darker h-full overflow-y-auto custom-scrollbar p-6 border-r border-gray-800">
                         
                         <div className="mb-4">
-                            <Link 
-                                to={`/course/${courseId}`} 
-                                className="inline-flex items-center text-sm text-gray-500 hover:text-white transition-colors"
-                            >
-                                <ArrowLeft size={16} className="mr-1" /> Back to Course
-                            </Link>
+                            {/* BACK BUTTON LOGIC */}
+                            {parentCourseId ? (
+                                <Link 
+                                    to={`/course/${parentCourseId}`} 
+                                    className="inline-flex items-center text-sm text-gray-500 hover:text-white transition-colors"
+                                >
+                                    <ArrowLeft size={16} className="mr-1" /> Back to Assignment List
+                                </Link>
+                            ) : (
+                                <button 
+                                    onClick={() => navigate(-1)}
+                                    className="inline-flex items-center text-sm text-gray-500 hover:text-white transition-colors"
+                                >
+                                    <ArrowLeft size={16} className="mr-1" /> Back
+                                </button>
+                            )}
                         </div>
 
                         <h1 className="text-2xl font-bold text-white mb-2">{question.quesid}. {question.question}</h1>
@@ -149,8 +254,14 @@ const Problem = () => {
                                 <div key={idx}>
                                     <h3 className="text-gray-400 font-bold mb-2 text-sm">Example {idx + 1}:</h3>
                                     <div className="bg-black/50 p-4 rounded border border-gray-800 font-mono text-sm space-y-2">
-                                        <div><span className="text-gray-500 block text-xs">Input:</span><span className="text-gray-300">{ex.input}</span></div>
-                                        <div><span className="text-gray-500 block text-xs">Output:</span><span className="text-gray-300">{ex.expected_output}</span></div>
+                                        <div>
+                                            <span className="text-gray-500 block text-xs uppercase mb-1">Input:</span>
+                                            <span className="text-gray-300 whitespace-pre-wrap block">{ex.input}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500 block text-xs uppercase mb-1">Output:</span>
+                                            <span className="text-gray-300 whitespace-pre-wrap block">{ex.expected_output}</span>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -163,7 +274,6 @@ const Problem = () => {
                 <Panel minSize={30}>
                     <PanelGroup direction="vertical">
                         
-                        {/* TOP: EDITOR */}
                         <Panel defaultSize={60} minSize={20}>
                             <div className="flex flex-col h-full bg-[#1e1e1e]">
                                 <div className="h-12 bg-darker border-b border-gray-800 flex items-center justify-between px-4 shrink-0">
@@ -185,7 +295,7 @@ const Problem = () => {
                                     </div>
                                 </div>
                                 <div className="flex-1 relative min-h-0">
-                                    <Editor height="100%" theme="vs-dark" language={language === 'javascript' ? 'javascript' : language === 'python' ? 'python' : language === 'c' ? 'c' : 'cpp'} value={code} onChange={(val) => setCode(val)} options={{ minimap: { enabled: false }, fontSize: 14, automaticLayout: true, padding: { top: 16 } }} />
+                                    <Editor height="100%" theme="vs-dark" language={language} value={code} onChange={setCode} options={{ minimap: { enabled: false }, fontSize: 14, automaticLayout: true, padding: { top: 16 } }} />
                                 </div>
                             </div>
                         </Panel>
@@ -203,7 +313,6 @@ const Problem = () => {
                                     
                                     {activeTab === 'testcase' && (
                                         <div className="flex gap-2">
-                                            {/* Case Buttons */}
                                             <div className="flex flex-col gap-2 w-full">
                                                 <div className="flex gap-2 mb-4">
                                                     {question.parsedTestCases?.examples?.map((_, idx) => (
@@ -237,7 +346,6 @@ const Problem = () => {
                                         <div className="h-full">
                                             {isRunning && <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2"><Loader2 className="animate-spin text-accent" size={24} /><span>Running Code...</span></div>}
                                             
-                                            {/* 1. RUN RESULTS (Multi-Case) */}
                                             {!isRunning && runResults && (
                                                 <div className="w-full">
                                                     <div className="flex gap-2 mb-4">
@@ -267,10 +375,25 @@ const Problem = () => {
                                                                 {currentRunResult?.passed ? "Accepted" : "Wrong Answer"}
                                                             </h4>
                                                             <div className="grid gap-4">
-                                                                <div><span className="text-gray-500 text-xs uppercase block mb-1">Input</span><div className="bg-darker p-2 rounded text-gray-300 font-mono text-xs">{currentRunResult?.input}</div></div>
+                                                                <div>
+                                                                    <span className="text-gray-500 text-xs block mb-1">Input</span>
+                                                                    <div className="bg-darker p-2 rounded text-gray-300 font-mono text-xs whitespace-pre-wrap">
+                                                                        {currentRunResult?.input}
+                                                                    </div>
+                                                                </div>
                                                                 <div className="grid grid-cols-2 gap-4">
-                                                                    <div><span className="text-gray-500 text-xs uppercase block mb-1">Your Output</span><div className="bg-darker p-2 rounded text-white font-mono text-xs whitespace-pre-wrap">{currentRunResult?.user_output}</div></div>
-                                                                    <div><span className="text-gray-500 text-xs uppercase block mb-1">Expected Output</span><div className="bg-darker p-2 rounded text-white font-mono text-xs whitespace-pre-wrap">{currentRunResult?.expected_output}</div></div>
+                                                                    <div>
+                                                                        <span className="text-gray-500 text-xs block mb-1">Your Output</span>
+                                                                        <div className="bg-darker p-2 rounded text-white font-mono text-xs whitespace-pre-wrap">
+                                                                            {currentRunResult?.user_output}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-gray-500 text-xs block mb-1">Expected</span>
+                                                                        <div className="bg-darker p-2 rounded text-white font-mono text-xs whitespace-pre-wrap">
+                                                                            {currentRunResult?.expected_output}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -285,7 +408,6 @@ const Problem = () => {
                                                             <CheckCircle size={64} className="text-green-500 mb-4" />
                                                             <h2 className="text-3xl font-bold text-green-500 mb-2">Accepted</h2>
                                                             <p className="text-gray-400 text-lg">All {submitResult.total_cases} test cases passed!</p>
-                                                            {/* Show Score if available */}
                                                             {submitResult.score_earned !== undefined && (
                                                                 <div className="mt-2 text-accent font-bold border border-accent/50 px-3 py-1 rounded bg-accent/10">
                                                                     + {submitResult.score_earned} Points Added

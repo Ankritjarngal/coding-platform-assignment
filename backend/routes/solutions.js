@@ -5,9 +5,29 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import pLimit from 'p-limit'; // 👈 npm install p-limit
 
 const execAsync = promisify(exec);
 const router = express.Router();
+
+// 🚦 CONCURRENCY LIMITER
+const limit = pLimit(5); 
+
+// --- HELPER: BULLETPROOF COMPARATOR ---
+function isOutputCorrect(userOutput, expectedOutput) {
+    // 1. Treat null/undefined as empty strings
+    const u = userOutput || "";
+    const e = expectedOutput || "";
+
+    // 2. If both are purely empty, they match!
+    if (u.trim() === "" && e.trim() === "") return true;
+
+    // 3. Normalize tokens (ignores all whitespace types)
+    const cleanUser = u.trim().split(/\s+/).join(' ');
+    const cleanExpected = e.trim().split(/\s+/).join(' ');
+
+    return cleanUser === cleanExpected;
+}
 
 // --- Helper: Fetch Test Cases ---
 async function fetch_testcases(questionId) {
@@ -54,9 +74,9 @@ function getDockerCommand(language, codeFilePath, inputFilePath) {
     const base = `docker run --rm -v "${hostTempPath}:/app" -w /app ${langConfig.image}`;
     
     if (langConfig.compile) {
-        return `${base} sh -c "${langConfig.compile} && ${langConfig.run}"`;
+        return `${base} sh -c "timeout 5s ${langConfig.compile} && timeout 5s ${langConfig.run}"`;
     }
-    return `${base} sh -c "${langConfig.run}"`;
+    return `${base} sh -c "timeout 5s ${langConfig.run}"`;
 }
 
 async function runCodeInDocker({ language, solution, testcaseInput }) {
@@ -64,8 +84,7 @@ async function runCodeInDocker({ language, solution, testcaseInput }) {
     const tempDir = path.join(process.cwd(), 'temp');
     
     const extensionMap = { c: 'c', cpp: 'cpp', python: 'py', javascript: 'js' };
-    const ext = extensionMap[language.toLowerCase()];
-    if (!ext) throw new Error('Unsupported language');
+    const ext = extensionMap[language.toLowerCase()] || 'txt';
 
     const codeFileName = `code-${uid}.${ext}`;
     const inputFileName = `input-${uid}.txt`;
@@ -80,10 +99,9 @@ async function runCodeInDocker({ language, solution, testcaseInput }) {
 
         const command = getDockerCommand(language, `/app/${codeFileName}`, `/app/${inputFileName}`);
         
-        // 10s Timeout
         const { stdout, stderr } = await execAsync(command, { timeout: 10000 });
         
-        return { output: stdout.trim(), error: stderr.trim() || null };
+        return { output: stdout, error: stderr.trim() || null };
     } catch (err) {
         return { output: "", error: err.stderr || err.message };
     } finally {
@@ -107,8 +125,13 @@ router.post('/run', async (req, res) => {
         const results = [];
 
         for (const tc of exampleCases) {
-            const result = await runCodeInDocker({ language, solution, testcaseInput: tc.input });
-            const passed = result.output.trim() === tc.expected_output.trim();
+            const result = await limit(() => runCodeInDocker({ 
+                language, 
+                solution, 
+                testcaseInput: tc.input 
+            }));
+
+            const passed = isOutputCorrect(result.output, tc.expected_output);
             
             results.push({
                 input: tc.input,
@@ -145,9 +168,15 @@ router.post('/submit', async (req, res) => {
 
         for (let i = 0; i < allCases.length; i++) {
             const tc = allCases[i];
-            const result = await runCodeInDocker({ language, solution, testcaseInput: tc.input });
             
-            const passed = result.output.trim() === tc.expected_output.trim();
+            const result = await limit(() => runCodeInDocker({ 
+                language, 
+                solution, 
+                testcaseInput: tc.input 
+            }));
+            
+            const passed = isOutputCorrect(result.output, tc.expected_output);
+
             if (!passed) allPassed = false;
 
             if (i >= exampleCases.length && passed) {
@@ -161,16 +190,21 @@ router.post('/submit', async (req, res) => {
                 passed: passed,
                 error: result.error
             });
-            
         }
 
         if (userId && courseId) {
-            await db.query(`
-                INSERT INTO solved_questions (user_id, question_id, course_id, points)
-                VALUES ($1, $2, $3, $4)
-                ON CONFLICT (user_id, question_id) 
-                DO UPDATE SET points = GREATEST(solved_questions.points, EXCLUDED.points);
-            `, [userId, questionId, courseId, hiddenPassedCount]);
+            const uId = parseInt(userId);
+            const cId = parseInt(courseId);
+            const qId = parseInt(questionId);
+
+            if (!isNaN(uId) && !isNaN(cId) && !isNaN(qId)) {
+                await db.query(`
+                    INSERT INTO solved_questions (user_id, question_id, course_id, points)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (user_id, question_id) 
+                    DO UPDATE SET points = GREATEST(solved_questions.points, EXCLUDED.points);
+                `, [uId, qId, cId, hiddenPassedCount]);
+            }
         }
         
         res.json({ 
@@ -182,7 +216,7 @@ router.post('/submit', async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("Submit Error:", err);
         res.status(500).json({ error: err.message });
     }
 });

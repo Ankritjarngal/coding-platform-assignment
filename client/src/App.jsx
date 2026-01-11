@@ -5,12 +5,12 @@ import { Toaster } from 'react-hot-toast';
 import Auth from './pages/Auth';
 import Home from './pages/Home';
 import Admin from './pages/Admin';
-import CourseView from './pages/CourseView';
+import CourseView from './pages/CourseView'; // This will now list Assignments
 import Profile from './pages/Profile';
 import SolveProblem from './pages/Problem';
 import Navbar from './components/Navbar';
 import AdminRoute from './components/AdminRoute'; 
-
+import AssignmentLobby from './pages/AssignmentLobby';
 const RequireAuth = ({ children }) => {
     const token = localStorage.getItem('token');
     return token ? children : <Navigate to="/auth" replace />;
@@ -51,13 +51,15 @@ function App() {
                 </RequireAuth>
             } />
 
+            {/* View Course -> Lists Assignments */}
             <Route path="/course/:id" element={
                 <RequireAuth>
                     <CourseView />
                 </RequireAuth>
             } />
-            
-            <Route path="/solve/:courseId/:problemId" element={
+            <Route path="/assignment/:assignmentId" element={<RequireAuth><AssignmentLobby /></RequireAuth>} />
+            {/* Solve Problem -> Context is now Assignment ID */}
+            <Route path="/solve/:assignmentId/:problemId" element={
                 <RequireAuth>
                     <SolveProblem />
                 </RequireAuth>

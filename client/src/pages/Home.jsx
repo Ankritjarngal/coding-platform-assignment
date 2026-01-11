@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
-import { Loader2, BookOpen, Lock, Globe, PlayCircle, AlertTriangle, X } from 'lucide-react';
+import { Loader2, BookOpen, Lock, Globe, PlayCircle, AlertTriangle, X, Ban } from 'lucide-react'; // 👈 Added Ban Icon
 import Admin from './Admin';
 import toast from 'react-hot-toast';
 
@@ -9,7 +9,8 @@ const Home = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
-        const [confirmModal, setConfirmModal] = useState(null); 
+    
+    const [confirmModal, setConfirmModal] = useState(null); 
     const [isStarting, setIsStarting] = useState(false); 
 
     const navigate = useNavigate();
@@ -43,16 +44,10 @@ const Home = () => {
 
     const handleCourseClick = (course) => {
         if (isAdmin) {
-            navigate(`/course/${course.course_id}`);
+            navigate(`/admin`); // Or open course details in admin
             return;
         }
-
-        if (course.has_attempted) {
-            toast.error("Assessment Locked: You have already attempted this course.");
-            return;
-        }
-
-        setConfirmModal(course);
+        navigate(`/course/${course.course_id}`);
     };
 
     const handleConfirmStart = async () => {
@@ -92,7 +87,10 @@ const Home = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {courses.map((course) => {
-                        const isLocked = !course.is_public && course.has_attempted;
+                        // Determine State Variables
+                        const isDisqualified = course.is_disqualified;
+                        const isFinished = !course.is_public && course.has_attempted;
+                        const isLocked = isDisqualified || isFinished;
 
                         return (
                             <div 
@@ -110,12 +108,14 @@ const Home = () => {
                                 <div className="p-6">
                                     <div className="flex justify-between items-start mb-4">
                                         
+                                        {/* Icon Box */}
                                         <div className={`p-3 rounded-lg border text-white transition-colors
                                             ${isLocked ? 'bg-red-900/20 border-red-900/50' : 'bg-black border-gray-800 text-accent group-hover:bg-accent'}
                                         `}>
-                                            {isLocked ? <Lock size={24} /> : <BookOpen size={24} />}
+                                            {isDisqualified ? <Ban size={24} /> : isFinished ? <Lock size={24} /> : <BookOpen size={24} />}
                                         </div>
                                         
+                                        {/* Score Display */}
                                         <div className="text-right">
                                              <div className="text-xl font-bold text-white">
                                                 {course.user_score || 0} <span className="text-gray-500 text-sm">/ {course.total_max_score || 0}</span>
@@ -125,7 +125,9 @@ const Home = () => {
                                     </div>
                                     
                                     <h3 className="text-xl font-bold text-white mb-2">{course.title}</h3>
-                                    <p className="text-gray-400 text-sm line-clamp-2 h-10">{course.description}</p>                                            
+                                    <p className="text-gray-400 text-sm line-clamp-2 h-10">{course.description}</p>
+                                    
+                                    {/* Footer Badges */}
                                     <div className="mt-4 pt-4 border-t border-gray-800 text-xs text-gray-500 flex items-center justify-between">                                        
                                         <span className="flex items-center gap-2">
                                             {isLocked ? (
@@ -136,12 +138,15 @@ const Home = () => {
                                                 <><Lock size={14}/> One-Time Exam</>
                                             )}
                                         </span>
-                                        {isLocked ? (
-                                            <span className="text-red-500 font-bold bg-red-900/20 px-2 py-0.5 rounded border border-red-900/30">LOCKED</span>
+
+                                        {/* Status Badge Logic */}
+                                        {isDisqualified ? (
+                                            <span className="text-red-500 font-bold bg-red-900/20 px-2 py-0.5 rounded border border-red-900/30">DISQUALIFIED</span>
+                                        ) : isFinished ? (
+                                            <span className="text-red-400 font-bold bg-red-900/20 px-2 py-0.5 rounded border border-red-900/30">LOCKED</span>
                                         ) : (
                                             <span className="text-green-500 font-bold bg-green-900/20 px-2 py-0.5 rounded border border-green-900/30">AVAILABLE</span>
                                         )}
-
                                     </div>
                                 </div>
                             </div>
@@ -150,11 +155,11 @@ const Home = () => {
                 </div>
             )}
 
+            {/* Custom Modal */}
             {confirmModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-[#0a0a0a] border border-red-500/30 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                         
-                        {/* Modal Header */}
                         <div className="bg-red-900/10 p-6 flex flex-col items-center text-center border-b border-red-500/10 relative">
                             <button 
                                 onClick={() => setConfirmModal(null)} 
@@ -175,9 +180,9 @@ const Home = () => {
                             
                             <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-3 text-left">
                                 <ul className="text-xs text-red-200 space-y-2 list-disc list-inside">
-                                    <li>This is a <b>Timed / One-Time Exam</b>.</li>
+                                    <li>This is a <b>Proctored Exam</b>.</li>
+                                    <li>Switching tabs will lead to <b>Disqualification</b>.</li>
                                     <li>Once started, you <b>cannot restart</b>.</li>
-                                    <li>Do not close the window until finished.</li>
                                 </ul>
                             </div>
                         </div>
