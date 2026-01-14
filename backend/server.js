@@ -8,6 +8,7 @@ import questionRoutes from './routes/questions.js';
 import solutionRoutes from './routes/solutions.js';
 import courseRoutes from './routes/course.js';
 import assignmentRoutes from './routes/assignment.js';
+import aiRoutes from './routes/ai.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/Assignment', assignmentRoutes);
 app.use('/Question', questionRoutes);
 app.use('/Solution', solutionRoutes);
 app.use('/Course', courseRoutes); 
+app.use('/ai', aiRoutes);
 
 // Test Route
 app.get('/', (req, res) => {

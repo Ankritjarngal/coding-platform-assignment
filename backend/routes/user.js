@@ -10,7 +10,8 @@ const router = express.Router();
 // 1. REGISTER
 router.post("/register", validInfo, async (req, res) => {
     try {
-        const { email, name, password, avatar } = req.body; 
+        // 👇 Added gemini_api_key here
+        const { email, name, password, avatar, gemini_api_key } = req.body; 
 
         const user = await db.query("SELECT * FROM users WHERE user_email = $1", [email]);
 
@@ -23,11 +24,14 @@ router.post("/register", validInfo, async (req, res) => {
         const bcryptPassword = await bcrypt.hash(password, salt);
 
         const userAvatar = avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${name}`;
+        
+        // Handle empty key as NULL
+        const finalKey = gemini_api_key && gemini_api_key.trim() !== "" ? gemini_api_key : null;
 
-        // Uses 'user_password' based on your schema
+        //  Updated INSERT query to include gemini_api_key
         const newUser = await db.query(
-            "INSERT INTO users (user_name, user_email, user_password, avatar, role) VALUES ($1, $2, $3, $4, 'student') RETURNING *", 
-            [name, email, bcryptPassword, userAvatar]
+            "INSERT INTO users (username, user_email, password, avatar, role, gemini_api_key) VALUES ($1, $2, $3, $4, 'student', $5) RETURNING *", 
+            [name, email, bcryptPassword, userAvatar, finalKey]
         );
 
         const token = jwtGenerator(newUser.rows[0].userid);
@@ -43,30 +47,22 @@ router.post("/login", validInfo, async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // 🔍 DEBUG LOGS
-        console.log("Login Attempt:", email);
-
         const user = await db.query("SELECT * FROM users WHERE user_email = $1", [email]);
 
         if (user.rows.length === 0) {
-            console.log("User not found in DB");
             return res.status(401).json("Password or Email is incorrect");
         }
 
         const dbUser = user.rows[0];
         
-        // 🔍 DEBUG: Print exact database columns to see the mismatch
-        console.log("DB User Columns:", Object.keys(dbUser));
-
-        // SAFETY CHECK: Try both common column names
-        const dbPassword = dbUser.user_password || dbUser.password || dbUser.userpassword;
+        // Handle column name variations
+        const dbPassword = dbUser.password || dbUser.userpassword;
 
         if (!dbPassword) {
             console.error("CRITICAL ERROR: Password column is missing or NULL in the database!");
             return res.status(500).json("Database Error: Password not found");
         }
 
-        // Compare using the found password
         const validPassword = await bcrypt.compare(password, dbPassword);
         
         if (!validPassword) return res.status(401).json("Password or Email is incorrect");
@@ -78,7 +74,7 @@ router.post("/login", validInfo, async (req, res) => {
             role: dbUser.role,
             user: {
                 id: dbUser.userid,
-                name: dbUser.user_name || dbUser.username, 
+                name: dbUser.username, 
                 avatar: dbUser.avatar
             }
         });
@@ -98,10 +94,12 @@ router.get("/profile", authorize, async (req, res) => {
         const u = user.rows[0];
         res.json({
             id: u.userid,
-            username: u.user_name || u.username,
+            username: u.username,
             email: u.user_email,
             avatar: u.avatar,
-            role: u.role
+            role: u.role,
+            // We verify if key exists, but don't send the raw key back for security
+            has_api_key: !!u.gemini_api_key 
         });
     } catch (err) {
         console.error(err.message);
@@ -112,17 +110,22 @@ router.get("/profile", authorize, async (req, res) => {
 // 4. UPDATE PROFILE 
 router.put("/update", authorize, async (req, res) => {
     try {
-        const { name, avatar, password } = req.body;
+        //  Added gemini_api_key to allowed updates
+        const { name, avatar, password, gemini_api_key } = req.body;
         const userId = req.user.id;
 
-        if (name) await db.query("UPDATE users SET user_name = $1 WHERE userid = $2", [name, userId]);
+        if (name) await db.query("UPDATE users SET username = $1 WHERE userid = $2", [name, userId]);
         if (avatar) await db.query("UPDATE users SET avatar = $1 WHERE userid = $2", [avatar, userId]);
+        
+        // Update API Key
+        if (gemini_api_key) {
+            await db.query("UPDATE users SET gemini_api_key = $1 WHERE userid = $2", [gemini_api_key, userId]);
+        }
 
         if (password && password.length > 0) {
             const salt = await bcrypt.genSalt(10);
             const bcryptPassword = await bcrypt.hash(password, salt);
-            // Updating 'user_password'
-            await db.query("UPDATE users SET user_password = $1 WHERE userid = $2", [bcryptPassword, userId]);
+            await db.query("UPDATE users SET password = $1 WHERE userid = $2", [bcryptPassword, userId]);
         }
 
         res.json("Profile updated successfully");

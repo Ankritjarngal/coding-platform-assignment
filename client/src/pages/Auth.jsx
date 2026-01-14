@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react'; // 👈 Import useEffect
 import { useNavigate } from 'react-router-dom';
 import API from '../api';
 import toast from 'react-hot-toast';
-import { Mail, Lock, User, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, RefreshCw, Key, Sparkles } from 'lucide-react'; // 👈 Added Key, Sparkles
 
 const Auth = ({ setAuth }) => {
     const [isLogin, setIsLogin] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const [inputs, setInputs] = useState({ email: '', password: '', name: '' });
+    // 👇 Added geminiKey to state
+    const [inputs, setInputs] = useState({ email: '', password: '', name: '', geminiKey: '' });
     
     const [avatarSeed, setAvatarSeed] = useState('Felix');
     const [avatarStyle, setAvatarStyle] = useState('adventurer');
@@ -31,7 +32,13 @@ const Auth = ({ setAuth }) => {
         
         const body = isLogin 
             ? { email: inputs.email, password: inputs.password } 
-            : { email: inputs.email, password: inputs.password, name: inputs.name, avatar: currentAvatarUrl };
+            : { 
+                email: inputs.email, 
+                password: inputs.password, 
+                name: inputs.name, 
+                avatar: currentAvatarUrl,
+                gemini_api_key: inputs.geminiKey 
+              };
 
         try {
             const { data } = await API.post(endpoint, body);
@@ -120,6 +127,35 @@ const Auth = ({ setAuth }) => {
                             required
                         />
                     </div>
+
+                    {!isLogin && (
+                        <div className="bg-purple-900/10 border border-purple-500/20 p-3 rounded-xl space-y-2 mt-2">
+                            <div className="flex justify-between items-center px-1">
+                                <label className="text-[10px] font-bold text-purple-400 uppercase flex items-center gap-1">
+                                    <Sparkles size={10}/> Gemini API Key <span className="text-gray-600 normal-case font-normal">(Optional)</span>
+                                </label>
+                                <a 
+                                    href="https://aistudio.google.com/app/apikey" 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="text-[10px] text-purple-400 hover:text-white underline decoration-dashed"
+                                >
+                                    Get Free Key
+                                </a>
+                            </div>
+                            <div className="relative">
+                                <Key className="absolute left-3 top-3 text-purple-500/50" size={16} />
+                                <input 
+                                    type="text" 
+                                    name="geminiKey"
+                                    className="w-full bg-black border border-purple-500/30 text-white rounded-lg py-2.5 pl-10 pr-4 focus:border-purple-500 outline-none transition-colors placeholder-gray-700 text-sm"
+                                    placeholder="Paste key for AI Tutor..."
+                                    value={inputs.geminiKey}
+                                    onChange={onChange}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     <button 
                         type="submit" 

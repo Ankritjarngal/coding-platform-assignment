@@ -22,11 +22,10 @@ router.get('/question', async (req, res) => {
     }
 });
 
-// ... imports
 
 // Create Question (Now links to Assignment)
 router.post('/input', async (req, res) => {
-    const { assignmentId, question, category, testcases } = req.body; // 👈 assignmentId is required now
+    const { assignmentId, question, category, testcases } = req.body; 
 
     try {
         const result = await db.query(

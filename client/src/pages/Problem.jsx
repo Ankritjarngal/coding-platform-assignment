@@ -7,22 +7,21 @@ import toast from 'react-hot-toast';
 import { Play, CheckCircle, Terminal, AlertCircle, Loader2, Dot, ArrowLeft, Lock, AlertTriangle } from 'lucide-react';
 import clsx from 'clsx';
 
-// DEFINE BOILERPLATE CODE TEMPLATES
-const BOILERPLATES = {
-    c: `#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // Write your C code here\n    printf("Hello World");\n    return 0;\n}`,
-    cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    cout << "Hello World";\n    return 0;\n}`,
-    python: `import sys\n\ndef solve():\n    # Write your Python code here\n    print("Hello World")\n\nif __name__ == '__main__':\n    solve()`,
-    javascript: `// Write your JavaScript code here\nconsole.log("Hello World");`
-};
+import AiTutor from '../components/AiTutor';
 
+const BOILERPLATES = {
+    c: `#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // Write your C code here\n    return 0;\n}`,
+    cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    return 0;\n}`,
+    python: `import sys\n\ndef solve():\n    # Write your Python code here\n    pass\n\nif __name__ == '__main__':\n    solve()`,
+    javascript: `// Write your JavaScript code here`
+};
 const Problem = () => {
-    // 1. UPDATE: Capture assignmentId from URL
     const { assignmentId, problemId } = useParams();
     const id = problemId; 
     const navigate = useNavigate();
 
     const [question, setQuestion] = useState(null);
-    const [parentCourseId, setParentCourseId] = useState(null); // To link back
+    const [parentCourseId, setParentCourseId] = useState(null); 
     
     const [language, setLanguage] = useState("c");
     const [code, setCode] = useState(BOILERPLATES["c"]); 
@@ -33,7 +32,7 @@ const Problem = () => {
     const [runResults, setRunResults] = useState(null); 
     const [submitResult, setSubmitResult] = useState(null);
 
-    // 🔒 PROCTORING STATE
+    // PROCTORING STATE
     const [warnings, setWarnings] = useState(0);
     const [isDisqualified, setIsDisqualified] = useState(false);
     const hasFetchedStatus = useRef(false);
@@ -55,7 +54,6 @@ const Problem = () => {
                 }
 
                 // B. Fetch Question & Parent Course Info
-                // We fetch assignment details to get the course_id for the back button
                 const assignRes = await API.get(`/Assignment/${assignmentId}`);
                 if (assignRes.data) {
                     setParentCourseId(assignRes.data.course_id);
@@ -74,7 +72,7 @@ const Problem = () => {
         init();
     }, [id, assignmentId]);
 
-    // 🔒 PROCTORING WATCHDOG (Event Listeners)
+    // PROCTORING WATCHDOG (Event Listeners)
     useEffect(() => {
         if (isDisqualified) return;
 
@@ -88,17 +86,14 @@ const Problem = () => {
             setWarnings(newWarnings);
 
             if (newWarnings < 3) {
-                // Warning Toast
                 toast.custom((t) => (
                     <div className="bg-red-600 text-white p-4 rounded-lg shadow-2xl flex items-center gap-3 animate-bounce">
                         <AlertTriangle size={24} /><div><h3 className="font-bold">PROCTOR WARNING {newWarnings}/2</h3><p className="text-sm">Do not switch tabs or minimize!</p></div>
                     </div>
                 ), { duration: 4000 });
                 
-                // Report to Backend
                 await API.post('/Assignment/report-violation', { userId, assignmentId, action: 'warn' });
             } else {
-                // Disqualify
                 setIsDisqualified(true);
                 await API.post('/Assignment/report-violation', { userId, assignmentId, action: 'disqualify' });
             }
@@ -158,7 +153,7 @@ const Problem = () => {
 
             const { data } = await API.post('/Solution/submit', {
                 userId: userId,
-                courseId: assignmentId, // 👈 Passing assignmentId as the context ID
+                courseId: assignmentId, 
                 questionId: id,
                 language,
                 solution: code
@@ -180,7 +175,7 @@ const Problem = () => {
         </div>
     );
 
-    // 🔒 LOCKOUT SCREEN (If disqualified)
+    // LOCKOUT SCREEN (If disqualified)
     if (isDisqualified) {
         return (
             <div className="h-screen w-full bg-black flex flex-col items-center justify-center text-white p-8 text-center animate-in zoom-in-95 duration-300">
@@ -224,7 +219,6 @@ const Problem = () => {
                     <div className="bg-darker h-full overflow-y-auto custom-scrollbar p-6 border-r border-gray-800">
                         
                         <div className="mb-4">
-                            {/* BACK BUTTON LOGIC */}
                             {parentCourseId ? (
                                 <Link 
                                     to={`/course/${parentCourseId}`} 
@@ -249,6 +243,13 @@ const Problem = () => {
                             'bg-yellow-900 text-yellow-300'
                         )}>{question.category}</span>
                         
+                        {/* Description Handling (If description exists separately from title) */}
+                        {question.description && (
+                            <div className="mt-4 text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">
+                                {question.description}
+                            </div>
+                        )}
+
                         <div className="mt-6 space-y-6">
                             {question.parsedTestCases?.examples?.map((ex, idx) => (
                                 <div key={idx}>
@@ -442,6 +443,14 @@ const Problem = () => {
                     </PanelGroup>
                 </Panel>
             </PanelGroup>
+
+            {question && (
+                <AiTutor 
+                    problemDescription={question.description || question.question} 
+                    userCode={code} 
+                    testResults={runResults || (submitResult?.failed_case ? [submitResult.failed_case] : null)} 
+                />
+            )}
         </div>
     );
 };
