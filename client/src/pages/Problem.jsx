@@ -15,6 +15,7 @@ const BOILERPLATES = {
     python: `import sys\n\ndef solve():\n    # Write your Python code here\n    pass\n\nif __name__ == '__main__':\n    solve()`,
     javascript: `// Write your JavaScript code here`
 };
+
 const Problem = () => {
     const { assignmentId, problemId } = useParams();
     const id = problemId; 
@@ -72,25 +73,27 @@ const Problem = () => {
         init();
     }, [id, assignmentId]);
 
-    // PROCTORING WATCHDOG (Event Listeners)
+    // 🔒 PROCTORING WATCHDOG (UPDATED: STRICTER LOGIC)
     useEffect(() => {
         if (isDisqualified) return;
 
-        const handleViolation = async () => {
+        // 1. Define the penalty action
+        const penalize = async (currentWarnings) => {
             const token = localStorage.getItem('token');
             if(!token) return;
             const payload = JSON.parse(atob(token.split(".")[1]));
             const userId = payload.user ? payload.user.id : payload.userid;
 
-            let newWarnings = warnings + 1;
-            setWarnings(newWarnings);
-
-            if (newWarnings < 3) {
-                toast.custom((t) => (
+            if (currentWarnings < 3) {
+                 toast.custom((t) => (
                     <div className="bg-red-600 text-white p-4 rounded-lg shadow-2xl flex items-center gap-3 animate-bounce">
-                        <AlertTriangle size={24} /><div><h3 className="font-bold">PROCTOR WARNING {newWarnings}/2</h3><p className="text-sm">Do not switch tabs or minimize!</p></div>
+                        <AlertTriangle size={24} />
+                        <div>
+                            <h3 className="font-bold">PROCTOR WARNING {currentWarnings}/3</h3>
+                            <p className="text-sm">Return to screen immediately!</p>
+                        </div>
                     </div>
-                ), { duration: 4000 });
+                ), { duration: 3000 });
                 
                 await API.post('/Assignment/report-violation', { userId, assignmentId, action: 'warn' });
             } else {
@@ -99,12 +102,38 @@ const Problem = () => {
             }
         };
 
+        const handleViolation = () => {
+            // Increment local state immediately
+            const newWarnings = warnings + 1;
+            setWarnings(newWarnings);
+            penalize(newWarnings);
+        };
+
+        // 2. Event Listeners (Immediate Trigger)
         const onVisibilityChange = () => { if (document.hidden) handleViolation(); };
-        const onBlur = () => { if (document.activeElement.tagName !== "IFRAME") handleViolation(); };
+        const onBlur = () => { 
+            // Ignore if user clicks inside the Code Editor (iframe)
+            if (document.activeElement?.tagName !== "IFRAME") handleViolation(); 
+        };
+
+        // 3. CONTINUOUS POLLING (The "Strict" Part)
+        // If user stays away, they get hit with a warning every 4 seconds.
+        const strictCheck = setInterval(() => {
+            if (document.hidden || !document.hasFocus()) {
+                if (document.activeElement?.tagName !== "IFRAME") {
+                    handleViolation();
+                }
+            }
+        }, 4000); // 4 Seconds Grace Period per warning
 
         document.addEventListener("visibilitychange", onVisibilityChange);
         window.addEventListener("blur", onBlur);
-        return () => { document.removeEventListener("visibilitychange", onVisibilityChange); window.removeEventListener("blur", onBlur); };
+
+        return () => {
+            clearInterval(strictCheck);
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+            window.removeEventListener("blur", onBlur);
+        };
     }, [warnings, isDisqualified, assignmentId]);
 
     const handleLanguageChange = (e) => {
@@ -153,7 +182,7 @@ const Problem = () => {
 
             const { data } = await API.post('/Solution/submit', {
                 userId: userId,
-                courseId: assignmentId, 
+                courseId: parentCourseId, // 👈 CHANGE THIS (Was assignmentId)
                 questionId: id,
                 language,
                 solution: code
@@ -175,7 +204,6 @@ const Problem = () => {
         </div>
     );
 
-    // LOCKOUT SCREEN (If disqualified)
     if (isDisqualified) {
         return (
             <div className="h-screen w-full bg-black flex flex-col items-center justify-center text-white p-8 text-center animate-in zoom-in-95 duration-300">
@@ -210,7 +238,7 @@ const Problem = () => {
             
             {/* Warning Banner */}
             {warnings > 0 && (
-                <div className="absolute top-0 left-0 w-full h-1 bg-red-600 z-50 animate-pulse" title={`Warnings: ${warnings}/2`}></div>
+                <div className="absolute top-0 left-0 w-full h-1 bg-red-600 z-50 animate-pulse" title={`Warnings: ${warnings}/3`}></div>
             )}
 
             <PanelGroup direction="horizontal">

@@ -43,15 +43,14 @@ const CourseView = () => {
     const handleAssignmentClick = (assign) => {
         // 1. Check Disqualification
         if (assign.is_disqualified) {
-            return toast.error("⛔ Access Denied: You have been disqualified.");
+            return toast.error("Access Denied: You have been disqualified.");
         }
 
         // 2. Check if already attempted
         if (assign.has_attempted) {
-             return toast.error("🔒 You have already completed this assignment.");
+             return toast.error("You have already completed this assignment.");
         }
 
-        // 3. Open Confirmation Modal
         setConfirmModal(assign);
     };
 
@@ -64,14 +63,10 @@ const CourseView = () => {
             const payload = JSON.parse(atob(token.split(".")[1]));
             const userId = payload.user ? payload.user.id : payload.userid;
 
-            // A. Lock the attempt in Database
             await API.post('/Assignment/start', { 
                 userId, 
                 assignmentId: confirmModal.assignment_id 
             });
-
-            // B. Redirect to Assignment Lobby (The new page with Timer/List)
-            // We no longer jump to the first question immediately.
             navigate(`/assignment/${confirmModal.assignment_id}`);
 
         } catch (e) {
@@ -146,7 +141,6 @@ const CourseView = () => {
                                 </div>
 
                                 <div className="flex items-center gap-6">
-                                    {/* 👇 SCORE DISPLAY (New Feature) */}
                                     {(assign.has_attempted || assign.user_score > 0) && (
                                         <div className="text-right hidden sm:block">
                                             <div className="text-sm font-bold text-white flex items-center gap-1 justify-end">

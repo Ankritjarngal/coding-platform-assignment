@@ -65,11 +65,7 @@ const Navbar = () => {
                     <span className="hidden md:block">CodeJudge</span>
                 </Link>
 
-                {isAdmin && (
-                    <Link to="/admin" className="hidden md:flex items-center gap-1 text-sm font-bold text-purple-400 hover:text-purple-300 transition-colors bg-purple-900/10 px-3 py-1.5 rounded-full border border-purple-900/20">
-                        <Plus size={16} /> Add Problem
-                    </Link>
-                )}
+  
             </div>
             
             <div className="flex gap-4 items-center">

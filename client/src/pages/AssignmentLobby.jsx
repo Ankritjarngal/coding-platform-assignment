@@ -179,56 +179,57 @@ const AssignmentLobby = () => {
                 </div>
             </div>
 
-            {/* Questions List */}
-            <h2 className="text-xl font-bold text-white mb-4 pl-1">Problems ({assignment.questions?.length || 0})</h2>
-            
-            <div className="grid gap-4">
-                {assignment.questions && assignment.questions.length > 0 ? (
-                    assignment.questions.map((q, idx) => (
-                        <Link 
-                            to={`/solve/${assignmentId}/${q.quesid}`} 
-                            key={q.quesid}
-                            className="flex items-center justify-between p-6 bg-darker border border-gray-800 rounded-xl hover:border-accent hover:bg-gray-800/50 transition-all group shadow-md"
-                        >
-                            <div className="flex items-center gap-5">
-                                {/* 👇 Logic: Show Number OR Checkmark if solved */}
-                                <span className={`flex items-center justify-center w-10 h-10 rounded-lg text-lg font-mono font-bold border transition-colors 
-                                    ${q.is_solved 
-                                        ? 'bg-green-600 border-green-500 text-white' 
-                                        : 'bg-gray-800 text-gray-400 border-gray-700 group-hover:bg-accent group-hover:text-white group-hover:border-accent'}`
-                                }>
-                                    {q.is_solved ? <CheckCircle size={20}/> : idx + 1}
-                                </span>
-                                <div>
-                                    <h3 className="text-lg font-bold text-white group-hover:text-accent transition-colors mb-1">{q.question}</h3>
-                                    <div className="flex gap-2">
-                                        <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide bg-gray-800 text-gray-500 border border-gray-700">
-                                            {q.category}
-                                        </span>
-                                        {/* 👇 Points earned display */}
-                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide border
-                                            ${q.points_earned > 0 
-                                                ? 'bg-green-900/20 text-green-400 border-green-900/30' 
-                                                : 'bg-gray-900 text-gray-600 border-gray-800'}`
-                                        }>
-                                            {q.points_earned || 0} pts
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 text-gray-500 group-hover:text-white transition-colors bg-black/40 px-4 py-2 rounded-lg border border-transparent group-hover:border-gray-700">
-                                <span className="text-sm font-medium">{q.is_solved ? "Review" : "Solve"}</span>
-                                <Play size={16} className="fill-current"/>
-                            </div>
-                        </Link>
-                    ))
-                ) : (
-                    <div className="text-center py-12 text-gray-500 bg-darker rounded-xl border border-dashed border-gray-800">
-                        No questions in this assignment yet.
-                    </div>
-                )}
+             {/* Questions List */}
+<h2 className="text-xl font-bold text-white mb-4 pl-1">Problems ({assignment.questions?.length || 0})</h2>
+
+<div className="grid gap-4">
+  {assignment.questions && assignment.questions.length > 0 ? (
+    assignment.questions.map((q, idx) => (
+      <Link 
+        to={`/solve/${assignmentId}/${q.quesid}`} 
+        key={q.quesid}
+        className="flex items-center justify-between p-6 bg-darker border border-gray-800 rounded-xl hover:border-accent hover:bg-gray-800/50 transition-all group shadow-md"
+      >
+        <div className="flex items-center gap-5">
+          {/* Question Index or Solved Icon */}
+          <span
+            className={`flex items-center justify-center w-10 h-10 rounded-full text-lg font-mono font-bold border transition-colors 
+              ${q.is_solved 
+                ? 'bg-green-600 border-green-500 text-white' 
+                : 'bg-gray-800 text-gray-400 border-gray-700 group-hover:bg-accent group-hover:text-white group-hover:border-accent'}`
+            }
+          >
+            {q.is_solved ? <CheckCircle size={20} /> : idx + 1}
+          </span>
+          <div>
+            <h3 className="text-lg font-bold text-white group-hover:text-accent transition-colors mb-1">{q.question}</h3>
+            <div className="flex gap-2">
+              <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide bg-gray-800 text-gray-500 border border-gray-700">
+                {q.category}
+              </span>
+              <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide border
+                ${q.points_earned > 0 
+                  ? 'bg-green-900/20 text-green-400 border-green-900/30' 
+                  : 'bg-gray-900 text-gray-600 border-gray-800'}`
+              }>
+                {q.points_earned || 0} pts
+              </span>
             </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3 text-gray-500 group-hover:text-white transition-colors bg-black/40 px-4 py-2 rounded-lg border border-transparent group-hover:border-gray-700">
+          <span className="text-sm font-medium">{q.is_solved ? "Review" : "Solve"}</span>
+          <Play size={16} className="fill-current"/>
+        </div>
+      </Link>
+    ))
+  ) : (
+    <div className="text-center py-12 text-gray-500 bg-darker rounded-xl border border-dashed border-gray-800">
+      No questions in this assignment yet.
+    </div>
+  )}
+</div>
         </div>
     );
 };
