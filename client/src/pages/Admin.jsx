@@ -4,8 +4,105 @@ import toast from 'react-hot-toast';
 import { 
     Plus, Upload, Users, ArrowLeft, Save, Sparkles, Loader2, 
     Eye, EyeOff, Trash2, FileDown, RefreshCw, Search, Clock, ChevronRight,
-    BookOpen, Calendar, FileText, Copy // 👈 Added Copy
+    BookOpen, Calendar, FileText, Copy, BarChart2, X, CheckCircle, AlertCircle
 } from 'lucide-react';
+
+/**
+ * ==========================================
+ * COMPONENT: STUDENT REPORT MODAL (NEW)
+ * Shows scores for a specific student
+ * ==========================================
+ */
+const StudentReportModal = ({ student, courseId, onClose }) => {
+    const [report, setReport] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchReport = async () => {
+            try {
+                // Reuse existing endpoint to get assignments with user scores
+                const { data } = await API.get(`/Assignment/course/${courseId}?userId=${student.userid}`);
+                setReport(data);
+            } catch (e) {
+                toast.error("Failed to load grades");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchReport();
+    }, [courseId, student]);
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-[#0a0a0a] border border-gray-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                
+                {/* Header */}
+                <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-darker">
+                    <div>
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <BarChart2 className="text-accent" /> Student Report
+                        </h3>
+                        <p className="text-gray-400 text-sm mt-1">
+                            Performance for <span className="text-white font-bold">{student.username}</span>
+                        </p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div className="p-6 overflow-y-auto custom-scrollbar">
+                    {loading ? (
+                        <div className="py-10 text-center flex flex-col items-center gap-3 text-gray-500">
+                            <Loader2 className="animate-spin" /> Loading grades...
+                        </div>
+                    ) : report.length === 0 ? (
+                        <div className="py-10 text-center text-gray-500 border border-dashed border-gray-800 rounded-xl">
+                            No assignments found for this course.
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {report.map((assign) => (
+                                <div key={assign.assignment_id} className="bg-black/40 border border-gray-800 p-4 rounded-xl flex justify-between items-center hover:border-gray-700 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`p-3 rounded-lg ${assign.has_attempted ? 'bg-blue-900/20 text-blue-400' : 'bg-gray-800 text-gray-500'}`}>
+                                            <FileText size={20} />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-bold">{assign.title}</h4>
+                                            <div className="flex items-center gap-3 text-xs mt-1">
+                                                {assign.has_attempted ? (
+                                                    <span className="flex items-center gap-1 text-green-400">
+                                                        <CheckCircle size={10} /> Submitted
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1 text-gray-500">
+                                                        <AlertCircle size={10} /> Not Attempted
+                                                    </span>
+                                                )}
+                                                {assign.is_disqualified && (
+                                                    <span className="text-red-500 font-bold border border-red-900/50 px-1.5 rounded bg-red-900/10">DISQUALIFIED</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-right">
+                                        <div className="text-2xl font-mono font-bold text-white">
+                                            {assign.user_score || 0} <span className="text-sm text-gray-600">/ {assign.max_score}</span>
+                                        </div>
+                                        <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Score</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 /**
  * ==========================================
@@ -342,15 +439,15 @@ const ManageAssignments = ({ courseId, onBack }) => {
                                     </div>
                                 </div>
                                 
-<div>
-    <label className="block text-gray-400 text-xs font-bold uppercase mb-2">Due Date (Deadline)</label>
-    <input 
-        type="datetime-local" 
-        value={form.dueDate || ''} 
-        onChange={e => setForm({...form, dueDate: e.target.value})}
-        className="bg-black border border-gray-700 rounded-lg p-2.5 text-white w-full outline-none focus:border-accent"
-    />
-</div>
+                                <div>
+                                    <label className="block text-gray-400 text-xs font-bold uppercase mb-2">Due Date (Optional)</label>
+                                    <input 
+                                        type="datetime-local" 
+                                        value={form.dueDate || ''} 
+                                        onChange={e => setForm({...form, dueDate: e.target.value})}
+                                        className="bg-black border border-gray-700 rounded-lg p-2.5 text-white w-full outline-none focus:border-accent"
+                                    />
+                                </div>
                             </div>
 
                             <div className="pt-4 flex justify-end">
@@ -402,7 +499,10 @@ const ManageAssignments = ({ courseId, onBack }) => {
                         </div>
                         
                         <div className="flex items-center gap-6">
-                            
+                            <div className="text-right hidden sm:block">
+                                <span className="block text-2xl font-bold text-white">{a.question_count || 0}</span>
+                                <span className="text-xs text-gray-500 uppercase font-bold tracking-wider">Questions</span>
+                            </div>
                             <ChevronRight size={20} className="text-gray-600 group-hover:text-white transition-colors"/>
                         </div>
                     </div>
@@ -434,6 +534,9 @@ const ManageStudents = ({ courseId }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [isAddingSingle, setIsAddingSingle] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    
+    // NEW: Selected student for Report Modal
+    const [viewingReport, setViewingReport] = useState(null);
 
     useEffect(() => {
         fetchStudents();
@@ -515,7 +618,15 @@ const ManageStudents = ({ courseId }) => {
 
     return (
         <div className="space-y-8 mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            
+            {/* REPORT MODAL */}
+            {viewingReport && (
+                <StudentReportModal 
+                    student={viewingReport} 
+                    courseId={courseId} 
+                    onClose={() => setViewingReport(null)} 
+                />
+            )}
+
             {/* ACTIONS HEADER */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Single Add */}
@@ -620,7 +731,16 @@ const ManageStudents = ({ courseId }) => {
                                                 <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
                                             </span>
                                         </td>
-                                        <td className="p-5">
+                                        <td className="p-5 flex gap-2">
+                                            {/* REPORT BUTTON */}
+                                            <button 
+                                                onClick={() => setViewingReport(student)} 
+                                                className="text-[10px] bg-blue-900/20 text-blue-400 border border-blue-900/50 px-2 py-1 rounded hover:bg-blue-900/40 transition-colors flex items-center gap-1"
+                                            >
+                                                <BarChart2 size={10} /> View Report
+                                            </button>
+                                            
+                                            {/* RESET BUTTON */}
                                             <button 
                                                 onClick={() => handleResetAssignment(student.userid)} 
                                                 className="text-[10px] bg-red-900/20 text-red-400 border border-red-900/50 px-2 py-1 rounded hover:bg-red-900/40 transition-colors flex items-center gap-1"

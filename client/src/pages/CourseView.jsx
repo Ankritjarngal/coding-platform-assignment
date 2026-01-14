@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import API from '../api';
-import { Loader2, ChevronRight, ArrowLeft, Clock, CheckCircle, PlayCircle, AlertTriangle, X } from 'lucide-react';
+import { Loader2, ChevronRight, ArrowLeft, Clock, CheckCircle, PlayCircle, AlertTriangle, X, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CourseView = () => {
@@ -27,7 +27,7 @@ const CourseView = () => {
                 const courseRes = await API.get(`/Course/${id}`);
                 setCourse(courseRes.data);
 
-                // 2. Fetch Assignments List (with user status)
+                // 2. Fetch Assignments List (with user status & scores)
                 const assignRes = await API.get(`/Assignment/course/${id}?userId=${userId}`);
                 setAssignments(assignRes.data);
             } catch (err) { 
@@ -43,12 +43,12 @@ const CourseView = () => {
     const handleAssignmentClick = (assign) => {
         // 1. Check Disqualification
         if (assign.is_disqualified) {
-            return toast.error("Access Denied: You have been disqualified.");
+            return toast.error("⛔ Access Denied: You have been disqualified.");
         }
 
         // 2. Check if already attempted
         if (assign.has_attempted) {
-             return toast.error("You have already completed this assignment.");
+             return toast.error("🔒 You have already completed this assignment.");
         }
 
         // 3. Open Confirmation Modal
@@ -145,21 +145,36 @@ const CourseView = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-4">
-                                    {assign.is_disqualified ? (
-                                        <span className="flex items-center gap-1.5 bg-red-900/20 text-red-500 px-3 py-1 rounded text-xs font-bold border border-red-900/50">
-                                            <AlertTriangle size={12}/> DISQUALIFIED
-                                        </span>
-                                    ) : assign.has_attempted ? (
-                                        <span className="flex items-center gap-1.5 bg-green-900/20 text-green-500 px-3 py-1 rounded text-xs font-bold border border-green-900/50">
-                                            <CheckCircle size={12}/> COMPLETED
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-1.5 bg-blue-900/20 text-blue-400 px-3 py-1 rounded text-xs font-bold border border-blue-900/50 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                            <PlayCircle size={12}/> START
-                                        </span>
+                                <div className="flex items-center gap-6">
+                                    {/* 👇 SCORE DISPLAY (New Feature) */}
+                                    {(assign.has_attempted || assign.user_score > 0) && (
+                                        <div className="text-right hidden sm:block">
+                                            <div className="text-sm font-bold text-white flex items-center gap-1 justify-end">
+                                                <Award size={14} className="text-yellow-500"/> 
+                                                {assign.user_score} / {assign.max_score || 100}
+                                            </div>
+                                            <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">
+                                                Your Score
+                                            </div>
+                                        </div>
                                     )}
-                                    <ChevronRight className={`transition-transform ${!isLocked && 'group-hover:translate-x-1 text-gray-500 group-hover:text-white'}`} />
+
+                                    <div className="flex items-center gap-4">
+                                        {assign.is_disqualified ? (
+                                            <span className="flex items-center gap-1.5 bg-red-900/20 text-red-500 px-3 py-1 rounded text-xs font-bold border border-red-900/50">
+                                                <AlertTriangle size={12}/> DISQUALIFIED
+                                            </span>
+                                        ) : assign.has_attempted ? (
+                                            <span className="flex items-center gap-1.5 bg-green-900/20 text-green-500 px-3 py-1 rounded text-xs font-bold border border-green-900/50">
+                                                <CheckCircle size={12}/> COMPLETED
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-1.5 bg-blue-900/20 text-blue-400 px-3 py-1 rounded text-xs font-bold border border-blue-900/50 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                                <PlayCircle size={12}/> START
+                                            </span>
+                                        )}
+                                        <ChevronRight className={`transition-transform ${!isLocked && 'group-hover:translate-x-1 text-gray-500 group-hover:text-white'}`} />
+                                    </div>
                                 </div>
                             </div>
                         );

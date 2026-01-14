@@ -99,7 +99,7 @@ async function runCodeInDocker({ language, solution, testcaseInput }) {
 
         const command = getDockerCommand(language, `/app/${codeFileName}`, `/app/${inputFileName}`);
         
-        const { stdout, stderr } = await execAsync(command, { timeout: 10000 });
+        const { stdout, stderr } = await execAsync(command, { timeout: 50000 });
         
         return { output: stdout, error: stderr.trim() || null };
     } catch (err) {

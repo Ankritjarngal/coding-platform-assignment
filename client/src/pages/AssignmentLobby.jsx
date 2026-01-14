@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import API from '../api';
-import { Loader2, Clock, Play, AlertTriangle, ArrowLeft, Calendar, Lock } from 'lucide-react';
+import { Loader2, Clock, Play, AlertTriangle, ArrowLeft, Calendar, Lock, CheckCircle, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const AssignmentLobby = () => {
@@ -27,8 +27,8 @@ const AssignmentLobby = () => {
                 const payload = JSON.parse(atob(token.split(".")[1]));
                 const userId = payload.user ? payload.user.id : payload.userid;
 
-                // 1. Get Assignment Info
-                const assignRes = await API.get(`/Assignment/${assignmentId}`);
+                // 1. Get Assignment Info (Pass userId to get scores!)
+                const assignRes = await API.get(`/Assignment/${assignmentId}?userId=${userId}`);
                 setAssignment(assignRes.data);
 
                 // 2. CHECK DEADLINE
@@ -45,8 +45,8 @@ const AssignmentLobby = () => {
                 const statusRes = await API.get(`/Assignment/status/${assignmentId}/${userId}`);
                 setStatus(statusRes.data);
 
-                // Set initial seconds from server
-                if (statusRes.data.remaining_seconds) {
+                // Set initial seconds from server (Server does the math: Duration - Elapsed)
+                if (statusRes.data.remaining_seconds !== undefined) {
                     setSecondsRemaining(Math.floor(statusRes.data.remaining_seconds));
                 }
                 
@@ -62,6 +62,7 @@ const AssignmentLobby = () => {
 
     // --- COUNTDOWN LOGIC ---
     useEffect(() => {
+        // Don't start if we haven't loaded time or if deadline passed
         if (secondsRemaining === null || isPastDueDate) return;
 
         const interval = setInterval(() => {
@@ -142,6 +143,7 @@ const AssignmentLobby = () => {
         <div className="max-w-5xl mx-auto p-6 md:p-8">
             <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-white mb-6 flex items-center gap-2"><ArrowLeft size={18}/> Back</button>
 
+            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-darker p-8 rounded-2xl border border-gray-800 mb-8 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-accent"></div>
                 
@@ -150,14 +152,20 @@ const AssignmentLobby = () => {
                     <p className="text-gray-400 max-w-xl mb-4">{assignment.description}</p>
                     
                     <div className="flex flex-wrap gap-4">
+                        <div className="inline-flex items-center gap-2 bg-gray-800 text-gray-300 border border-gray-700 px-3 py-1 rounded text-xs font-bold">
+                            <Clock size={12}/> Duration: {assignment.duration_minutes} Mins
+                        </div>
+                        
+                        {/* 👇 SCORE BADGE */}
+                        <div className="inline-flex items-center gap-2 bg-yellow-900/20 text-yellow-500 border border-yellow-900/50 px-3 py-1 rounded text-xs font-bold">
+                            <Award size={12}/> Score: {assignment.user_score || 0} / {assignment.max_score}
+                        </div>
+
                         {assignment.due_date && (
                             <div className="inline-flex items-center gap-2 bg-orange-900/20 text-orange-400 border border-orange-900/50 px-3 py-1 rounded text-xs font-bold">
                                 <Calendar size={12}/> Due: {new Date(assignment.due_date).toLocaleString()}
                             </div>
                         )}
-                        <div className="inline-flex items-center gap-2 bg-gray-800 text-gray-300 border border-gray-700 px-3 py-1 rounded text-xs font-bold">
-                            <Clock size={12}/> Duration: {assignment.duration_minutes} Mins
-                        </div>
                     </div>
                 </div>
 
@@ -183,19 +191,34 @@ const AssignmentLobby = () => {
                             className="flex items-center justify-between p-6 bg-darker border border-gray-800 rounded-xl hover:border-accent hover:bg-gray-800/50 transition-all group shadow-md"
                         >
                             <div className="flex items-center gap-5">
-                                <span className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-800 text-gray-400 text-lg font-mono font-bold border border-gray-700 group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-colors">
-                                    {idx + 1}
+                                {/* 👇 Logic: Show Number OR Checkmark if solved */}
+                                <span className={`flex items-center justify-center w-10 h-10 rounded-lg text-lg font-mono font-bold border transition-colors 
+                                    ${q.is_solved 
+                                        ? 'bg-green-600 border-green-500 text-white' 
+                                        : 'bg-gray-800 text-gray-400 border-gray-700 group-hover:bg-accent group-hover:text-white group-hover:border-accent'}`
+                                }>
+                                    {q.is_solved ? <CheckCircle size={20}/> : idx + 1}
                                 </span>
                                 <div>
                                     <h3 className="text-lg font-bold text-white group-hover:text-accent transition-colors mb-1">{q.question}</h3>
-                                    <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide bg-gray-800 text-gray-500 border border-gray-700">
-                                        {q.category}
-                                    </span>
+                                    <div className="flex gap-2">
+                                        <span className="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide bg-gray-800 text-gray-500 border border-gray-700">
+                                            {q.category}
+                                        </span>
+                                        {/* 👇 Points earned display */}
+                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide border
+                                            ${q.points_earned > 0 
+                                                ? 'bg-green-900/20 text-green-400 border-green-900/30' 
+                                                : 'bg-gray-900 text-gray-600 border-gray-800'}`
+                                        }>
+                                            {q.points_earned || 0} pts
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             
                             <div className="flex items-center gap-3 text-gray-500 group-hover:text-white transition-colors bg-black/40 px-4 py-2 rounded-lg border border-transparent group-hover:border-gray-700">
-                                <span className="text-sm font-medium">Solve</span>
+                                <span className="text-sm font-medium">{q.is_solved ? "Review" : "Solve"}</span>
                                 <Play size={16} className="fill-current"/>
                             </div>
                         </Link>
