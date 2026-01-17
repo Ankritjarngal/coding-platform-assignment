@@ -7,12 +7,6 @@ import {
     BookOpen, Calendar, FileText, Copy, BarChart2, X, CheckCircle, AlertCircle
 } from 'lucide-react';
 
-/**
- * ==========================================
- * COMPONENT: STUDENT REPORT MODAL (NEW)
- * Shows scores for a specific student
- * ==========================================
- */
 const StudentReportModal = ({ student, courseId, onClose }) => {
     const [report, setReport] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -104,12 +98,7 @@ const StudentReportModal = ({ student, courseId, onClose }) => {
     );
 };
 
-/**
- * ==========================================
- * LEVEL 3: MANAGE QUESTIONS
- * (Inside a specific Assignment)
- * ==========================================
- */
+
 const ManageQuestions = ({ assignmentId, onBack }) => {
     const [questions, setQuestions] = useState([]);
     const [form, setForm] = useState({ question: '', category: '' });
@@ -330,12 +319,7 @@ const ManageQuestions = ({ assignmentId, onBack }) => {
     );
 };
 
-/**
- * ==========================================
- * LEVEL 2: MANAGE ASSIGNMENTS
- * (Inside a specific Course)
- * ==========================================
- */
+
 const ManageAssignments = ({ courseId, onBack }) => {
     const [assignments, setAssignments] = useState([]);
     const [selectedAssignment, setSelectedAssignment] = useState(null);
@@ -368,7 +352,6 @@ const ManageAssignments = ({ courseId, onBack }) => {
         }
     };
 
-    // If an assignment is selected, render Level 3
     if (selectedAssignment) {
         return (
             <ManageQuestions 
@@ -520,12 +503,7 @@ const ManageAssignments = ({ courseId, onBack }) => {
     );
 };
 
-/**
- * ==========================================
- * LEVEL 2: MANAGE STUDENTS
- * (Inside a specific Course)
- * ==========================================
- */
+
 const ManageStudents = ({ courseId }) => {
     const [email, setEmail] = useState("");
     const [activeStudents, setActiveStudents] = useState([]);
@@ -535,7 +513,6 @@ const ManageStudents = ({ courseId }) => {
     const [isAddingSingle, setIsAddingSingle] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     
-    // NEW: Selected student for Report Modal
     const [viewingReport, setViewingReport] = useState(null);
 
     useEffect(() => {
@@ -781,11 +758,9 @@ const ManageStudents = ({ courseId }) => {
     );
 };
 
-/**
- * COMPONENT: Create Course Form (Level 1 Helper)
- */
+
 const CreateCourse = ({ onSuccess }) => {
-    const [form, setForm] = useState({ title: '', description: '', is_public: true });
+    const [form, setForm] = useState({ title: '', description: '', is_public: false });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e) => {
@@ -796,7 +771,7 @@ const CreateCourse = ({ onSuccess }) => {
         try {
             await API.post('/Course/create', form);
             toast.success("Course Created Successfully!");
-            setForm({ title: '', description: '', is_public: true });
+            setForm({ title: '', description: '', is_public: false });
             if (onSuccess) onSuccess();
         } catch (err) {
             toast.error("Failed to create course");
@@ -822,14 +797,8 @@ const CreateCourse = ({ onSuccess }) => {
                     <textarea className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white focus:border-accent outline-none h-32 transition-colors" 
                         value={form.description} onChange={e => setForm({...form, description: e.target.value})} required disabled={isSubmitting} placeholder="Brief overview of the course..."/>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-black/40 rounded-lg border border-gray-800">
-                    <input type="checkbox" id="public" className="w-5 h-5 accent-accent" 
-                        checked={form.is_public} onChange={e => setForm({...form, is_public: e.target.checked})} disabled={isSubmitting}/>
-                    <div>
-                        <label htmlFor="public" className="text-white font-medium cursor-pointer block">Public Course</label>
-                        <p className="text-xs text-gray-500">Visible on student dashboards automatically.</p>
-                    </div>
-                </div>
+
+                {/* 🗑️ REMOVED PUBLIC CHECKBOX 🗑️ */}
                 
                 <button 
                     disabled={isSubmitting}
@@ -844,16 +813,11 @@ const CreateCourse = ({ onSuccess }) => {
     );
 };
 
-/**
- * ==========================================
- * LEVEL 1: ADMIN DASHBOARD (MAIN)
- * Lists Courses -> Drills down to Assignments
- * ==========================================
- */
+
 const Admin = () => {
     const [courses, setCourses] = useState([]);
     const [selectedCourse, setSelectedCourse] = useState(null);
-    const [activeTab, setActiveTab] = useState("curriculum"); // 'curriculum' or 'students'
+    const [activeTab, setActiveTab] = useState("curriculum"); 
     const [isCreating, setIsCreating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(null);
 
@@ -899,7 +863,6 @@ const Admin = () => {
         }
     };
 
-    // --- VIEW: SELECTED COURSE DETAILS ---
     if (selectedCourse) {
         return (
             <div className="max-w-6xl mx-auto p-6 animate-in fade-in slide-in-from-bottom-4">
@@ -949,7 +912,6 @@ const Admin = () => {
         );
     }
 
-    // --- VIEW: COURSE LIST ---
     return (
         <div className="max-w-6xl mx-auto p-6">
             <div className="flex justify-between items-center mb-10 border-b border-gray-800 pb-6">
