@@ -6,19 +6,50 @@ import dotenv from 'dotenv';
 dotenv.config();
 const router = express.Router();
 
-// --- GEMINI CONFIG ---
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
 
-// --- GET SINGLE QUESTION ---
-router.get('/question', async (req, res) => {
-    const { id } = req.query;
+router.get("/question", async (req, res) => {
     try {
-        const { rows } = await db.query('SELECT * FROM questions WHERE quesid = $1', [id]);
-        if (rows.length === 0) return res.status(404).json({ error: 'Question not found' });
-        res.json(rows[0]);
+        const { id } = req.query;
+        
+        // 1. Fetch data (using the confirmed 'testcases' column)
+        const { rows } = await db.query("SELECT * FROM questions WHERE quesid = $1", [id]);
+
+        if (rows.length === 0) return res.status(404).json({ error: "Question not found" });
+
+        const q = rows[0];
+
+        // 2. PARSE & SANITIZE
+        let safeTestCases = [];
+        try {
+            // Parse the string from DB
+            const parsed = typeof q.testcases === 'string' ? JSON.parse(q.testcases) : q.testcases;
+
+            // ✅ CASE A: Your format -> { "examples": [...], "hidden": [...] }
+            if (parsed && Array.isArray(parsed.examples)) {
+                safeTestCases = parsed.examples; 
+            } 
+            // ⚠️ CASE B: Flat Array -> [ {input...}, {input...} ]
+            else if (Array.isArray(parsed)) {
+                safeTestCases = parsed.slice(0, 3);
+            }
+        } catch (e) {
+            console.error("JSON Parsing Error:", e.message);
+            safeTestCases = [];
+        }
+
+        res.json({
+            quesid: q.quesid,
+            question: q.title || q.question, 
+            description: q.description || q.question, 
+            category: q.category,
+            testcases: safeTestCases 
+        });
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error(err.message);
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
@@ -39,9 +70,7 @@ router.post('/input', async (req, res) => {
     }
 });
 
-// ... (Generate AI and Get Question endpoints remain mostly the same)
-// Just ensure 'Get Question' doesn't fail. The query 'SELECT * FROM questions WHERE quesid = $1' works regardless of parent.
-// --- GENERATE AI TEST CASES ---
+
 router.post('/generate-testcases', async (req, res) => {
     const { description, category, existingTestCases } = req.body;
     if (!description) return res.status(400).json({ error: "Description is required" });

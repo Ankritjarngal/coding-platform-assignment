@@ -61,11 +61,14 @@ const Problem = () => {
                 }
 
                 const { data } = await API.get(`/Question/question?id=${id}`);
-                let parsed = null;
-                try {
-                    parsed = typeof data.testcases === 'string' ? JSON.parse(data.testcases) : data.testcases;
-                    if (Array.isArray(parsed)) parsed = { examples: parsed.slice(0,3), hidden: parsed.slice(3) };
-                } catch (e) { console.error("Parse error", e); }
+                
+                // The backend now sends the 'examples' array directly as 'testcases'
+                let parsed = { examples: [], hidden: [] };
+                
+                if (data.testcases && Array.isArray(data.testcases)) {
+                    parsed.examples = data.testcases;
+                }
+
                 setQuestion({ ...data, parsedTestCases: parsed });
 
             } catch (err) { toast.error("Failed to load data"); }
@@ -271,12 +274,7 @@ const Problem = () => {
                             'bg-yellow-900 text-yellow-300'
                         )}>{question.category}</span>
                         
-                        {/* Description Handling (If description exists separately from title) */}
-                        {question.description && (
-                            <div className="mt-4 text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">
-                                {question.description}
-                            </div>
-                        )}
+
 
                         <div className="mt-6 space-y-6">
                             {question.parsedTestCases?.examples?.map((ex, idx) => (
