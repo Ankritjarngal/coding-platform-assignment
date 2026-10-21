@@ -172,47 +172,39 @@ def build():
     add_centered(doc, "ABSTRACT", size=14, bold=True, space_after=12)
     add_body(
         doc,
-        "Software reverse engineering—the analysis of compiled binaries to recover program "
-        "structure, behavior, and intent without original source code—has long been a "
-        "specialist craft. Classical toolchains such as Ghidra, IDA Pro, and Binary Ninja "
-        "already provide strong disassembly and decompilation, yet analysts still spend "
-        "large fractions of effort on renaming, type recovery, structure layout, and "
-        "navigating stripped symbols. Recent advances in large language models (LLMs) and "
-        "agentic tooling are changing that bottleneck.",
+        "Software reverse engineering is the analysis of compiled binaries to recover "
+        "program structure, behavior, and intent when original source code is unavailable. "
+        "Classical toolchains such as Ghidra, IDA Pro, and Binary Ninja already provide "
+        "strong disassembly and decompilation. Historically, however, a large share of "
+        "effort still went into manual naming, type recovery, and understanding stripped "
+        "symbols—making deep reverse engineering slow and expert-only.",
         first_indent=False,
     )
     add_body(
         doc,
-        "This seminar report surveys how AI is making reverse engineering more efficient: "
-        "specialized decompilation models such as LLM4Decompile, identifier and type "
-        "recovery systems, and in-tool assistants (Binary Ninja Sidekick, Hex-Rays IDA "
-        "Assist, GhidraMCP bridges). Measured benchmarks show substantial gains in "
-        "re-executability and readability when LLMs refine classical decompiler output, "
-        "while also revealing correctness gaps that demand human verification.",
+        "This seminar report first establishes that background, then examines how "
+        "artificial intelligence—especially large language models and coding agents—"
+        "has accelerated the pipeline. AI does not replace classical tools; it sits on "
+        "top of them, drafting readable explanations, refining pseudo-code, and "
+        "automating iterate-and-verify loops. Benchmarks such as LLM4Decompile show "
+        "clear gains when models refine decompiler output, while also reminding us that "
+        "correctness still requires human and automated verification.",
     )
     add_body(
         doc,
-        "Using video games as the primary case study, the report examines how "
-        "modifications that once required years of expert reverse engineering—especially "
-        "cross-game “mashups” built from compiled executables rather than studio "
-        "source—have become comparatively practical. The central technical pattern is "
-        "not rewriting a game from scratch, but instrumenting binaries through "
-        "passthrough bridges, thin DLL injection, shared-memory compositing, and "
-        "AI-assisted matching decompilation loops. Minecraft running inside Elden Ring, "
-        "related 2026 mashup demos, and AI-accelerated console decompilation projects "
-        "illustrate both the opportunity and the limits of this shift.",
-    )
-    add_body(
-        doc,
-        "The report concludes that AI amplifies reverse engineering productivity; it does "
-        "not eliminate the need for classical analysis, verification oracles, or ethical "
-        "and legal judgment around copyright, anti-cheat, and redistribution.",
+        "As the main case study, the report focuses on video games: closed, optimized "
+        "binaries where deep modification once required years of specialist work. "
+        "Recent projects show that systems from different games can be combined at "
+        "runtime by reverse-engineering compiled processes—using bridges, hooks, and "
+        "shared memory—rather than rewriting engines from scratch. AI assistance made "
+        "this class of work comparatively practical. The report ends with limits: "
+        "hallucinations, obfuscation, legal constraints, and ethical responsibility.",
     )
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(12)
     run = p.add_run(
-        "Keywords: Reverse Engineering, Decompilation, Large Language Models, Ghidra, "
-        "Binary Analysis, Game Modding, Passthrough Mods, Matching Decompilation."
+        "Keywords: Reverse Engineering, Decompilation, Large Language Models, Binary "
+        "Analysis, Game Modding, AI Agents, Software Security."
     )
     set_run_font(run, size=12, italic=True)
 
@@ -227,24 +219,24 @@ def build():
         "Chapter 1: Introduction to Software Reverse Engineering",
         "    1.1 What Reverse Engineering Means",
         "    1.2 The Traditional RE Pipeline",
-        "Chapter 2: How AI Transforms Reverse Engineering",
-        "    2.1 Neural and LLM-Based Decompilation",
-        "    2.2 In-Tool Assistants and Agentic Workflows",
-        "    2.3 Measured Gains and Correctness Limits",
-        "Chapter 3: Why Video Games Are the Right Case Study",
-        "    3.1 Closed Engines and Missing Source",
-        "    3.2 Pre-AI Effort versus Post-AI Acceleration",
+        "Chapter 2: AI-Assisted Reverse Engineering",
+        "    2.1 What AI Changes in the Pipeline",
+        "    2.2 Tools and Agentic Workflows",
+        "    2.3 Evidence of Speed and Remaining Gaps",
+        "Chapter 3: Why Video Games Are the Case Study",
+        "    3.1 Closed Binaries and Limited APIs",
+        "    3.2 From Expert-Only Work to Faster Iteration",
         "Chapter 4: Techniques for Modifying Compiled Games",
-        "    4.1 Passthrough and Shared-Memory Bridges",
-        "    4.2 Native Injection and Thin Hooks",
-        "    4.3 Decomp-as-Library and Matching Agent Loops",
-        "Chapter 5: Case Study — Games Inside Games",
-        "    5.1 Minecraft inside Elden Ring",
-        "    5.2 The 2026 Mashup Wave and Related Work",
-        "    5.3 What Became Easier—and What Did Not",
-        "Chapter 6: Limitations, Ethics, and Open Challenges",
-        "    6.1 Hallucinations, Obfuscation, and Verification",
-        "    6.2 Copyright, Anti-Cheat, and Community Norms",
+        "    4.1 Passthrough Bridges",
+        "    4.2 Native Injection and Hooks",
+        "    4.3 Decompilation-Assisted Reuse",
+        "Chapter 5: Case Study — Cross-Game Binary Bridges",
+        "    5.1 Problem Setting",
+        "    5.2 Architecture of a Runtime Bridge",
+        "    5.3 Role of AI in Making It Practical",
+        "Chapter 6: Challenges, Limits, and Ethics",
+        "    6.1 Correctness and Obfuscation",
+        "    6.2 Legal and Ethical Boundaries",
         "Chapter 7: Conclusion",
         "References",
     ]
@@ -263,18 +255,18 @@ def build():
         doc,
         [
             "Figure 1.1: Classical reverse-engineering pipeline from binary to insight.",
-            "Figure 2.1: AI-augmented RE pipeline (classical tools + LLM refine + verify).",
-            "Figure 4.1: Passthrough bridge architecture for two concurrent games.",
-            "Figure 5.1: Conceptual data flow in a Minecraft–Elden Ring style bridge.",
+            "Figure 2.1: AI-augmented RE pipeline on top of classical tools.",
+            "Figure 4.1: Passthrough bridge between two compiled game processes.",
+            "Figure 5.1: Data flow in a cross-game runtime bridge.",
         ],
     )
     add_heading_custom(doc, "Tables", level=2)
     add_bullets(
         doc,
         [
-            "Table 2.1: Selected benchmark results for AI-assisted decompilation.",
-            "Table 4.1: Comparison of compiled-game mashup techniques.",
-            "Table 5.1: Case-study examples and their enabling techniques.",
+            "Table 2.1: Selected results for AI-assisted decompilation.",
+            "Table 4.1: Comparison of compiled-game modification techniques.",
+            "Table 5.1: Case-study elements and enabling techniques.",
         ],
     )
 
@@ -292,8 +284,6 @@ def build():
         ("MCP", "Model Context Protocol"),
         ("PE", "Portable Executable"),
         ("RE", "Reverse Engineering"),
-        ("ROM", "Read-Only Memory (console game image)"),
-        ("SCA", "Software Composition Analysis"),
     ]
     for a, b in abbr:
         p = doc.add_paragraph()
@@ -310,10 +300,10 @@ def build():
         doc,
         "Reverse engineering (RE) is the disciplined analysis of a finished software "
         "artifact—typically a compiled binary—to recover design decisions, algorithms, "
-        "data formats, and behaviors that are not available as original source code. "
-        "In security research, interoperability work, digital preservation, and game "
-        "modding, RE is often the only practical path when vendors ship closed "
-        "executables (Eagle, 2011; Hex-Rays, 2025).",
+        "data formats, and behaviors that are not available as original source code "
+        "(Eagle, 2011). In security research, interoperability work, digital "
+        "preservation, and software modification, RE is often the only practical path "
+        "when vendors ship closed executables.",
         first_indent=False,
     )
     add_body(
@@ -321,49 +311,49 @@ def build():
         "Critically, reverse engineering is not the same as rewriting a program from "
         "scratch. The binary already encodes control flow, calling conventions, and "
         "data layouts. The analyst’s job is to interpret and, when appropriate, "
-        "instrument that existing machine code. This distinction is central to the "
-        "present seminar: recent “game inside a game” demos succeed because they "
-        "operate on compiled processes, not because an AI regenerates two full game "
-        "engines as clean greenfield projects.",
+        "instrument that existing machine code. This distinction frames the rest of "
+        "the seminar: recent advances succeed because they operate on compiled "
+        "processes more efficiently, not because AI invents full applications from "
+        "nothing.",
     )
 
     add_heading_custom(doc, "1.2 The Traditional RE Pipeline", level=2)
     add_body(
         doc,
-        "A conventional static/dynamic reverse-engineering workflow proceeds roughly "
-        "as follows (Eagle, 2011; Ghidra, 2024):",
+        "A conventional reverse-engineering workflow proceeds roughly as follows "
+        "(Eagle, 2011; Ghidra, 2024):",
         first_indent=False,
     )
     add_bullets(
         doc,
         [
-            "Ingest the binary (PE/ELF/Mach-O or console ROM) and identify architecture, compiler, and packing.",
+            "Ingest the binary and identify architecture, compiler, and packing.",
             "Disassemble instructions and reconstruct control-flow graphs.",
-            "Decompile intermediate representations into pseudo-C (Ghidra P-Code, Hex-Rays, Binary Ninja HLIL).",
-            "Recover imports, RTTI, strings, and signature-matched library functions.",
-            "Perform dynamic analysis with a debugger or instrumentation framework (e.g., Frida).",
-            "Apply human judgment to name functions, define structures, and form a narrative of behavior.",
+            "Decompile intermediate representations into pseudo-C.",
+            "Recover imports, strings, and signature-matched library functions.",
+            "Optionally perform dynamic analysis with a debugger or instrumentation.",
+            "Apply human judgment to name functions, define structures, and form a behavioral narrative.",
         ],
     )
     add_body(
         doc,
         "This pipeline is powerful and largely deterministic, but it remains labor-"
-        "intensive. Stripped binaries present opaque names such as sub_401000 and "
-        "local_28. Structure fields appear as raw offsets. Optimized code (-O2/-O3) "
-        "further obscures original developer intent. Hours of expert attention are "
-        "often spent before any higher-level modification—such as a stable game "
-        "hook—can be written safely.",
+        "intensive. Stripped binaries present opaque names. Structure fields appear "
+        "as raw offsets. Optimized code further obscures original intent. Hours or "
+        "weeks of expert attention are often spent before any higher-level "
+        "modification can be written safely. That human bottleneck is exactly where "
+        "AI assistance has the largest impact.",
     )
     add_mono_block(
         doc,
         [
-            "[ Binary PE/ELF/ROM ]",
+            "[ Compiled Binary ]",
             "        |",
             "        v",
             "[ Disassembly + CFG ] ---> [ Decompiler Pseudo-C ]",
             "        |",
             "        v",
-            "[ Symbol/Type Recovery ] ---> [ Dynamic Checks ] ---> [ Human Insight ]",
+            "[ Manual Naming / Types ] ---> [ Insight or Modification ]",
         ],
     )
     add_caption(doc, "Figure 1.1: Classical reverse-engineering pipeline from binary to insight.")
@@ -371,377 +361,307 @@ def build():
     page_break(doc)
 
     # ---------- CHAPTER 2 ----------
-    add_heading_custom(doc, "CHAPTER 2: HOW AI TRANSFORMS REVERSE ENGINEERING", level=1)
-    add_heading_custom(doc, "2.1 Neural and LLM-Based Decompilation", level=2)
+    add_heading_custom(doc, "CHAPTER 2: AI-ASSISTED REVERSE ENGINEERING", level=1)
+    add_heading_custom(doc, "2.1 What AI Changes in the Pipeline", level=2)
     add_body(
         doc,
-        "Large language models trained on paired assembly and source have opened a "
-        "new track of neural decompilation. LLM4Decompile (Tan et al., 2024) released "
-        "open models ranging from 1.3B to 33B parameters in two styles: End models "
-        "that map binary/assembly directly toward C, and Ref models that refine "
-        "pseudo-C already produced by Ghidra. On the HumanEval-Decompile benchmark, "
-        "the End-6.7B model reported about 45.4% average re-executability, more than "
-        "doubling GPT-4o’s roughly 16% in the authors’ comparison; refining Ghidra "
-        "with Ref models raised re-executability from about 20% (Ghidra alone) toward "
-        "the low-to-mid 50% range for mid-size Ref variants (Tan et al., 2024).",
+        "AI-assisted reverse engineering keeps classical tools as the foundation and "
+        "adds a productivity layer on top. Large language models read decompiler "
+        "output and propose meaningful names, types, comments, and structural "
+        "hypotheses. Specialized decompilation models can also refine pseudo-C so "
+        "that it becomes closer to re-executable source (Tan et al., 2024).",
         first_indent=False,
     )
     add_body(
         doc,
-        "Parallel research recovers developer-facing identifiers rather than full "
-        "recompilation. Systems such as DIRE and DIRTY demonstrated substantial "
-        "exact-match rates for variable names and types from decompiler ASTs (Lacomis "
-        "et al., 2019; Chen et al., 2022). ReSym combines LLMs with constrained "
-        "reasoning to recover user-defined structures from stripped binaries (Xie et "
-        "al., 2024). These results matter operationally: readable names and types "
-        "compress the time an analyst needs before writing a patch or hook.",
+        "The practical effect is compression of analysis time: analysts spend less "
+        "effort on mechanical renaming and more on verifying behavior and designing "
+        "safe modifications. AI drafts; classical analysis engines still measure "
+        "bytes and control flow; humans approve.",
     )
 
-    add_heading_custom(doc, "2.2 In-Tool Assistants and Agentic Workflows", level=2)
+    add_heading_custom(doc, "2.2 Tools and Agentic Workflows", level=2)
     add_body(
         doc,
-        "Industrial adoption has concentrated less on replacing Hex-Rays or Ghidra "
-        "and more on embedding AI inside those environments. Binary Ninja Sidekick "
-        "offers structure recovery, renaming, summarization, and evidence-linked "
-        "investigation inside the decompiler UI (Vector 35, 2024). Hex-Rays has "
-        "introduced IDA Assist as an in-GUI harness and an official MCP server so "
-        "external coding agents can query databases and propose renames or patches "
-        "under analyst approval (Hex-Rays, 2025). Community bridges such as GhidraMCP "
-        "expose decompilation, cross-references, and renaming to agent clients "
+        "Industrial adoption has concentrated on embedding AI inside existing "
+        "environments. Assistants inside commercial decompilers can recover "
+        "structures, summarize functions, and investigate questions with links back "
+        "to intermediate language (Vector 35, 2024; Hex-Rays, 2025). Bridges such as "
+        "Model Context Protocol servers expose Ghidra or IDA databases to coding "
+        "agents, enabling autonomous navigation, renaming, and scripted checks "
         "(Wired, 2025).",
         first_indent=False,
     )
     add_body(
         doc,
-        "The emerging pattern is agentic reverse engineering: an LLM proposes "
-        "hypotheses, calls tools, and iterates, while classical analysis engines "
-        "remain the source of truth for bytes and control flow. For game "
-        "decompilation projects, the same pattern appears as a closed loop—propose "
-        "C, compile with the original toolchain, diff against the target object—"
-        "rather than free-form chat about assembly (Lewis, 2026; reversedwithai, 2026).",
+        "In stronger workflows, an agent proposes a change, compiles or diffs against "
+        "the target binary, and retries until a verification oracle passes. This "
+        "pattern is especially visible in game preservation projects that demand "
+        "byte-identical matching (Lewis, 2026; reversedwithai, 2026).",
     )
     add_mono_block(
         doc,
         [
-            "Binary --> [Ghidra / IDA / Binary Ninja] --> Pseudo-C / IL",
-            "       --> [LLM rename / retype / refine]",
-            "       --> [Agent via MCP / scripts]",
-            "       --> [Verify: rebuild, objdiff, emulate]",
-            "       --> Human-approved insight or hook",
+            "Binary --> [Ghidra / IDA / Binary Ninja] --> Pseudo-C",
+            "       --> [LLM rename / explain / refine]",
+            "       --> [Agent iterates with checks]",
+            "       --> Human-approved understanding or hook",
         ],
     )
-    add_caption(doc, "Figure 2.1: AI-augmented RE pipeline (classical tools + LLM refine + verify).")
+    add_caption(doc, "Figure 2.1: AI-augmented RE pipeline on top of classical tools.")
 
-    add_heading_custom(doc, "2.3 Measured Gains and Correctness Limits", level=2)
+    add_heading_custom(doc, "2.3 Evidence of Speed and Remaining Gaps", level=2)
     add_body(
         doc,
-        "AI improvements are real but uneven. DecompileBench (2025) reports that "
-        "LLM-based methods can outperform commercial tools on perceived "
-        "understandability while showing substantially lower functional correctness "
-        "on some metrics—illustrating the risk of plausible but wrong code "
-        "(DecompileBench authors, 2025). Obfuscation techniques such as control-flow "
-        "flattening still collapse many LLM decompilation successes. Therefore, "
-        "responsible practice treats AI output as a draft requiring an oracle: "
-        "re-execution tests, byte-identical matching, or independent review.",
+        "LLM4Decompile reported substantial re-executability gains for models that "
+        "either decompile directly or refine Ghidra output, outperforming generic "
+        "chat models on the authors’ benchmarks (Tan et al., 2024). Related work on "
+        "identifier recovery shows that names and types can often be restored at "
+        "useful accuracy from decompiler ASTs (Chen et al., 2022).",
         first_indent=False,
     )
-    add_caption(doc, "Table 2.1: Selected benchmark results for AI-assisted decompilation.")
+    add_body(
+        doc,
+        "Gaps remain. Broader evaluations warn that LLM output can look readable "
+        "while being functionally wrong (DecompileBench authors, 2025). Obfuscation "
+        "still collapses many automated successes. Therefore speed without "
+        "verification is not progress—it is risk.",
+    )
+    add_caption(doc, "Table 2.1: Selected results for AI-assisted decompilation.")
     add_table(
         doc,
         ["System / Setting", "Metric", "Reported Result"],
         [
-            ["LLM4Decompile-End-6.7B", "HumanEval re-executability", "~45.4% vs GPT-4o ~16%"],
-            ["Ghidra alone", "HumanEval re-executability", "~20%"],
-            ["LLM4Decompile-Ref on Ghidra", "HumanEval re-executability", "~53% (6.7B Ref)"],
-            ["DIRTY", "Variable name / type exact match", "~66% / ~76%"],
-            ["DecompileBench (2025)", "LLM vs commercial correctness", "Readability up; CER can drop ~52%"],
+            ["LLM4Decompile-End", "Re-executability (HumanEval-Decompile)", "~45% (vs ~16% GPT-4o in paper)"],
+            ["Ghidra alone", "Re-executability", "~20%"],
+            ["Ghidra + LLM refine", "Re-executability", "~53% (mid-size Ref model)"],
+            ["DIRTY-style recovery", "Names / types", "Often majority exact-match on benchmarks"],
+            ["DecompileBench", "Readability vs correctness", "Readability can rise while correctness drops"],
         ],
     )
 
     page_break(doc)
 
     # ---------- CHAPTER 3 ----------
-    add_heading_custom(doc, "CHAPTER 3: WHY VIDEO GAMES ARE THE RIGHT CASE STUDY", level=1)
-    add_heading_custom(doc, "3.1 Closed Engines and Missing Source", level=2)
+    add_heading_custom(doc, "CHAPTER 3: WHY VIDEO GAMES ARE THE CASE STUDY", level=1)
+    add_heading_custom(doc, "3.1 Closed Binaries and Limited APIs", level=2)
     add_body(
         doc,
-        "Commercial games are an extreme RE setting. Engines ship as optimized "
-        "native binaries, often with custom allocators, proprietary serialization, "
-        "GPU command buffers, and anti-tamper or anti-cheat layers. Official modding "
-        "APIs—when they exist—expose only curated surfaces. Anything deeper (camera "
-        "matrices, collision queries, damage application, frame presentation) usually "
-        "requires locating addresses and calling conventions inside the compiled "
-        "image (Fox, 2024).",
+        "Commercial games are an extreme reverse-engineering setting. Engines ship "
+        "as optimized native binaries, often with custom allocators, proprietary "
+        "formats, GPU command submission, and anti-tamper layers. Official modding "
+        "APIs—when they exist—expose only curated surfaces. Anything deeper "
+        "(camera matrices, collision queries, damage application, frame "
+        "presentation) usually requires locating addresses and calling conventions "
+        "inside the compiled image.",
         first_indent=False,
     )
     add_body(
         doc,
-        "This is why game case studies clarify the seminar thesis. Asset swaps and "
-        "scripted plugin mods (for example, historical Mario Kart–themed Counter-"
-        "Strike maps built with server plugins) are not the same class of problem "
-        "as merging two live engines. The latter demands reverse engineering of "
-        "compiled behavior: hooks, shared memory protocols, and renderer "
-        "compositing (Bustin, 2026; Sheikh, 2026).",
+        "That is why games clarify the seminar thesis. Simple scripted plugins that "
+        "use documented APIs are not the same class of problem as merging two live "
+        "compiled engines. The latter demands reverse engineering of binary behavior: "
+        "hooks, shared-memory protocols, and renderer compositing.",
     )
 
-    add_heading_custom(doc, "3.2 Pre-AI Effort versus Post-AI Acceleration", level=2)
+    add_heading_custom(doc, "3.2 From Expert-Only Work to Faster Iteration", level=2)
     add_body(
         doc,
-        "Matching decompilation communities spent years recovering Super Mario 64, "
-        "The Legend of Zelda: Ocarina of Time, and Mario Kart Wii into byte-"
-        "identical C projects. Those efforts built essential tooling—splat, m2c, "
-        "decomp.me, decomp-permuter, objdiff—but progress was human-limited "
-        "function by function (sm64 decomp community; riidefi mkw work).",
+        "Matching decompilation communities historically spent years recovering "
+        "classic console titles into byte-identical C projects. Those efforts built "
+        "essential tooling, but progress was human-limited function by function. "
+        "AI coding agents now sit on top of that toolchain: propose C, compile with "
+        "the original compiler, diff against the target object, and retry "
+        "(Lewis, 2026). Separately, static recompilation turns old binaries into "
+        "portable code for modern platforms (Wiseguy, 2024).",
         first_indent=False,
     )
     add_body(
         doc,
-        "AI coding agents now sit on top of that toolchain. Reports from Snowboard "
-        "Kids 2 and related projects describe headless agent loops that pick an "
-        "unmatched function, attempt C, compile, and diff until match or timeout—"
-        "with multi-week agent runs sometimes outpacing months of manual matching "
-        "(Lewis, 2026). Separately, static recompilation projects such as N64: "
-        "Recompiled translate console binaries into portable C for modern ports "
-        "(Wiseguy, 2024). Together, these advances lower the cost of understanding "
-        "and reusing compiled game logic—the prerequisite for ambitious mashups.",
+        "Together, these advances lower the cost of understanding and reusing "
+        "compiled game logic—the prerequisite for ambitious runtime bridges that "
+        "were previously near-impossible outside specialist teams.",
     )
 
     page_break(doc)
 
     # ---------- CHAPTER 4 ----------
     add_heading_custom(doc, "CHAPTER 4: TECHNIQUES FOR MODIFYING COMPILED GAMES", level=1)
-    add_heading_custom(doc, "4.1 Passthrough and Shared-Memory Bridges", level=2)
+    add_heading_custom(doc, "4.1 Passthrough Bridges", level=2)
     add_body(
         doc,
-        "Passthrough modding runs two games concurrently. One process typically "
-        "owns the world (terrain, enemies, lighting); the other owns player "
-        "mechanics or a second renderer. A bridge—often a Fabric/Java mod on one "
-        "side and a native DLL on the other—exchanges camera pose, collision rays, "
-        "entity proxies, and damage events over shared memory or local IPC. At "
-        "present time, guest pixels are depth-tested into the host swapchain so "
-        "blocks appear behind walls correctly (Bustin, 2026; MartianLee, 2026).",
+        "Passthrough modding runs two games concurrently. One process typically owns "
+        "the world (terrain, enemies, lighting); the other owns player mechanics or "
+        "a second renderer. A bridge—often a script/mod on one side and a native "
+        "library on the other—exchanges camera pose, collision rays, entity proxies, "
+        "and damage events over shared memory or local IPC. At present time, guest "
+        "pixels can be depth-tested into the host frame so both worlds appear "
+        "coherent (open bridge implementations, 2026).",
         first_indent=False,
     )
     add_mono_block(
         doc,
         [
-            "Guest Game (e.g., Minecraft)          Host Game (e.g., Elden Ring)",
-            "  Fabric/native mod  --camera/frames-->  Bridge DLL (hooks Present)",
-            "                 <--ray hits/HP/entities--",
-            "                 --damage events-------->",
-            "         Shared memory / IPC files",
-            "  Depth-composite guest RGBA into host frame",
+            "Guest Game Process                 Host Game Process",
+            "  player systems / logic  <---->   world / physics / renderer",
+            "                 \\               /",
+            "                  Bridge Layer",
+            "           hooks · shared memory · IPC",
+            "                       |",
+            "            Single composited frame",
         ],
     )
-    add_caption(doc, "Figure 4.1: Passthrough bridge architecture for two concurrent games.")
+    add_caption(doc, "Figure 4.1: Passthrough bridge between two compiled game processes.")
 
-    add_heading_custom(doc, "4.2 Native Injection and Thin Hooks", level=2)
+    add_heading_custom(doc, "4.2 Native Injection and Hooks", level=2)
     add_body(
         doc,
         "When only one host process should remain authoritative, modders inject a "
-        "minimal DLL (for example via a dinput8.dll proxy or a loader such as "
-        "ModEngine2/me3), hook rendering or gameplay functions with libraries like "
-        "MinHook, and push heavy work to an external daemon. Design goals emphasize "
-        "crash isolation and small in-process footprints (Altimit, 2026). AI agents "
-        "accelerate the search for stable byte patterns, RTTI names, and call sites, "
-        "especially when paired with live memory tools exposed over agent protocols.",
+        "minimal library, hook rendering or gameplay functions, and push heavy work "
+        "to an external helper process. Design goals emphasize crash isolation and "
+        "small in-process footprints. AI agents accelerate searching for stable byte "
+        "patterns, class metadata, and call sites—especially when paired with live "
+        "memory inspection tools.",
         first_indent=False,
     )
 
-    add_heading_custom(doc, "4.3 Decomp-as-Library and Matching Agent Loops", level=2)
+    add_heading_custom(doc, "4.3 Decompilation-Assisted Reuse", level=2)
     add_body(
         doc,
-        "A third route uses community decompilations as libraries. Super Mario 64’s "
-        "matching decomp enables projects that embed Mario’s physics inside other "
-        "hosts without redistributing Nintendo assets—builders supply their own ROM "
-        "(sm64 community; Game Pixel AI survey, 2026). Matching agent loops for "
-        "ongoing decomps follow a strict oracle: the original compiler is fixed; "
-        "inline assembly cheats and edited verification scripts are rejected "
-        "(reversedwithai, 2026). This discipline is what turns AI speed into "
-        "trustworthy preservation rather than unverifiable guesses.",
+        "A third route uses community matching decompilations as libraries: recovered "
+        "C that recompiles to the original bytes can be linked into new hosts for "
+        "preservation or experimental composition. Matching agent loops follow a "
+        "strict oracle—the original compiler is fixed—so AI speed becomes trustworthy "
+        "only when verification cannot be cheated (reversedwithai, 2026).",
         first_indent=False,
     )
-    add_caption(doc, "Table 4.1: Comparison of compiled-game mashup techniques.")
+    add_caption(doc, "Table 4.1: Comparison of compiled-game modification techniques.")
     add_table(
         doc,
         ["Technique", "Core Idea", "Typical Use", "Main Risk"],
         [
-            [
-                "Content port",
-                "Convert guest assets into host formats",
-                "Vehicles/weapons as host entities",
-                "Format drift; incomplete behavior",
-            ],
-            [
-                "Passthrough",
-                "Run both binaries; sync + composite",
-                "Full guest systems in host world",
-                "Sync bugs; version pin fragility",
-            ],
-            [
-                "Headless rules",
-                "Reimplement guest logic; host is view",
-                "Simulations inside another game",
-                "Behavior mismatch with original",
-            ],
-            [
-                "Decomp-as-library",
-                "Call matched/recompiled guest code",
-                "Retro characters/engines in hosts",
-                "Legal/ROM requirements; porting cost",
-            ],
+            ["Content port", "Convert guest assets into host formats", "Items/models as host entities", "Incomplete behavior"],
+            ["Passthrough", "Run both binaries; sync + composite", "Full guest systems in host world", "Sync bugs; version fragility"],
+            ["Headless rules", "Reimplement guest logic; host is view", "Simulations inside another game", "Behavior mismatch"],
+            ["Decomp reuse", "Call matched/recompiled guest code", "Preservation / embedded logic", "Legal & toolchain cost"],
         ],
     )
 
     page_break(doc)
 
     # ---------- CHAPTER 5 ----------
-    add_heading_custom(doc, "CHAPTER 5: CASE STUDY — GAMES INSIDE GAMES", level=1)
-    add_heading_custom(doc, "5.1 Minecraft inside Elden Ring", level=2)
+    add_heading_custom(doc, "CHAPTER 5: CASE STUDY — CROSS-GAME BINARY BRIDGES", level=1)
+    add_heading_custom(doc, "5.1 Problem Setting", level=2)
     add_body(
         doc,
-        "In late 2025–2026, demonstrations of Minecraft running inside Elden Ring "
-        "became a viral emblem of AI-era modding. Creators showed Steve exploring "
-        "the Lands Between with Minecraft HUD elements, items, and combat against "
-        "host enemies (Jacobs demos covered by TweakTown, Decrypt, and IGN, 2026). "
-        "Not all demos shipped public Windows builds immediately; however, open "
-        "repositories document a concrete architecture that matches the claims.",
+        "The case study asks a concrete question: how can gameplay systems from one "
+        "closed-source title appear inside another title’s world when neither studio "
+        "provides source code? Historically, answers were limited to asset swaps or "
+        "official plugin APIs. Combining two live engines—camera, collision, combat, "
+        "and rendering—was rare because it required deep binary analysis plus fragile "
+        "integration code.",
         first_indent=False,
     )
     add_body(
         doc,
-        "The minecraft-crossover-bridge project (and the Windows-oriented Minecraft "
-        "Ring port) keep Minecraft Java and Elden Ring as separate processes. A "
-        "Fabric mod captures camera and frames; a native bridge DLL loaded into "
-        "Elden Ring overwrites camera state, casts rays against host collision, "
-        "publishes enemy proxies, applies damage through host functions, and "
-        "composites Minecraft’s image with a depth test (Bustin, 2026; siddoff, "
-        "2026). Addresses are validated against expected bytes so mismatched game "
-        "versions disable features instead of corrupting memory blindly.",
+        "Recent open implementations and public demonstrations show that this barrier "
+        "has dropped. Creators run two compiled games side by side, reverse-engineer "
+        "enough of each process to exchange state, and present a single composited "
+        "view. The point for this seminar is technical, not commercial branding: "
+        "compiled-code modification, not greenfield rewriting.",
+    )
+
+    add_heading_custom(doc, "5.2 Architecture of a Runtime Bridge", level=2)
+    add_body(
+        doc,
+        "A representative architecture keeps both games as separate processes. The "
+        "guest side captures player pose and rendered frames. The host side receives "
+        "that pose, overwrites its camera, casts rays against its own collision, "
+        "publishes nearby entities, and applies damage through existing host "
+        "functions. Shared memory or IPC carries the protocol. A depth test merges "
+        "pixels so guest geometry respects host walls. Addresses are often validated "
+        "against expected byte patterns so mismatched builds disable features instead "
+        "of corrupting memory blindly.",
+        first_indent=False,
     )
     add_mono_block(
         doc,
         [
-            "Minecraft (player + blocks + HUD)",
-            "   | shared memory: pose, RGBA, depth",
+            "Guest (player systems)",
+            "   | shared memory: pose, frames, events",
             "   v",
-            "Bridge DLL in Elden Ring",
-            "   | overwrite camera | raycast terrain | proxy enemies",
+            "Bridge (hooks + protocol)",
+            "   | camera overwrite | raycasts | entity proxies | damage calls",
             "   v",
-            "Elden Ring presents composited frame (offline / no EAC path)",
+            "Host (world + renderer) --> composited frame",
         ],
     )
-    add_caption(doc, "Figure 5.1: Conceptual data flow in a Minecraft–Elden Ring style bridge.")
+    add_caption(doc, "Figure 5.1: Data flow in a cross-game runtime bridge.")
 
-    add_heading_custom(doc, "5.2 The 2026 Mashup Wave and Related Work", level=2)
+    add_heading_custom(doc, "5.3 Role of AI in Making It Practical", level=2)
     add_body(
         doc,
-        "Press coverage described a broader wave of “vibe-coded” mashups: "
-        "skateboarding systems in Modern Warfare 2 maps, Mario Kart vehicles in "
-        "Call of Duty: World at War Zombies, Spider-Man traversal in Arkham City "
-        "spaces, and Escape from Tarkov-inspired systems in Skyrim (Thomas/IGN, "
-        "2026; Decrypt, 2026). Tooling write-ups such as Universal Modder’s mashup "
-        "skill catalog four routes—content port, passthrough, headless rules, and "
-        "decomp-as-library—and record field notes for dozens of combinations "
-        "(Sheikh, 2026). Separately, CS2-style movement and gunplay conversions of "
-        "offline Elden Ring illustrate injection-heavy single-host redesigns rather "
-        "than dual-process compositing.",
+        "AI does not magically invent two game engines. It accelerates the reverse-"
+        "engineering and glue layers: locating functions, drafting hook code, "
+        "designing shared-memory layouts, diagnosing sync bugs, and iterating until "
+        "behavior looks correct. Coding agents paired with decompilers shorten what "
+        "used to be months of specialist work into much shorter build–test cycles "
+        "(Sheikh, 2026; Lewis, 2026).",
         first_indent=False,
     )
     add_body(
         doc,
-        "For academic clarity: older Counter-Strike Mario Kart maps (AMX Mod X era) "
-        "are scripted gameplay transformations on Source/GoldSrc plugin APIs. They "
-        "are historically interesting but should not be conflated with binary-level "
-        "passthrough mashups of 2026. The seminar’s focus remains compiled-engine "
-        "instrumentation accelerated by AI-assisted reverse engineering.",
+        "Honesty matters for academic work: many viral clips are demonstrations; "
+        "fully documented, reproducible bridges are fewer. Version pinning, depth "
+        "compositing edge cases, and offline-only constraints remain hard. AI lowers "
+        "the expertise floor; it does not remove engineering judgment.",
     )
-    add_caption(doc, "Table 5.1: Case-study examples and their enabling techniques.")
+    add_caption(doc, "Table 5.1: Case-study elements and enabling techniques.")
     add_table(
         doc,
-        ["Example", "Primary Technique", "AI Role (typical)", "Notes"],
+        ["Element", "Technique", "AI Contribution", "Still Hard"],
         [
-            [
-                "Minecraft ↔ Elden Ring",
-                "Passthrough bridge",
-                "Glue code, address/protocol iteration",
-                "Public bridge code available",
-            ],
-            [
-                "Mario Kart in CoD Zombies",
-                "Passthrough / injected systems",
-                "Rapid prototype glue",
-                "Mostly demo clips in press",
-            ],
-            [
-                "SM64 Mario in modern hosts",
-                "Decomp-as-library",
-                "Optional; decomp was human-led",
-                "Requires user-supplied ROM",
-            ],
-            [
-                "Snowboard Kids 2 matching",
-                "Agent + objdiff oracle",
-                "Function matching loops",
-                "Preservation, not mashup",
-            ],
+            ["Two live binaries", "Passthrough / IPC bridge", "Protocol + hook drafting", "Version fragility"],
+            ["Shared camera/collision", "Memory hooks + raycasts", "Faster address discovery", "Correct struct layouts"],
+            ["Visual merge", "Depth-tested compositing", "Debug iteration", "Edge cases / timing"],
+            ["Preservation twin", "Matching decomp + objdiff", "Function matching loops", "Oracle discipline"],
         ],
-    )
-
-    add_heading_custom(doc, "5.3 What Became Easier—and What Did Not", level=2)
-    add_body(
-        doc,
-        "What became easier is the middle of the stack: proposing hook code, "
-        "drafting shared-memory protocols, renaming decompiled functions, and "
-        "iterating on compile–diff loops. What remains hard is everything that "
-        "still needs ground truth—correct struct layouts, anti-cheat avoidance "
-        "policies (most serious projects stay offline), version pinning, depth "
-        "compositing edge cases, and legal redistribution of assets. Many viral "
-        "clips are demonstrations; open, reproducible bridges are the minority "
-        "(heyaican analysis, 2026). AI lowers the expertise floor; it does not "
-        "grant a free pass on verification or rights.",
-        first_indent=False,
     )
 
     page_break(doc)
 
     # ---------- CHAPTER 6 ----------
-    add_heading_custom(doc, "CHAPTER 6: LIMITATIONS, ETHICS, AND OPEN CHALLENGES", level=1)
-    add_heading_custom(doc, "6.1 Hallucinations, Obfuscation, and Verification", level=2)
+    add_heading_custom(doc, "CHAPTER 6: CHALLENGES, LIMITS, AND ETHICS", level=1)
+    add_heading_custom(doc, "6.1 Correctness and Obfuscation", level=2)
     add_body(
         doc,
-        "LLM assistants invent plausible types, comments, and even protocol fields. "
-        "Without a fixed oracle—unit tests, re-executability checks, or byte-"
-        "identical object diffs—agents have been observed to “cheat” by forking "
-        "compilers or editing verification scripts (reversedwithai, 2026). "
-        "Obfuscation and heavy optimization continue to defeat both classical and "
-        "neural decompilers. Best practice is dual control: AI proposes, classical "
-        "tools measure, humans approve.",
+        "LLM assistants invent plausible types, comments, and protocol fields. "
+        "Without a fixed oracle—tests, re-execution, or byte-identical diffs—agents "
+        "may optimize for looking finished rather than being correct "
+        "(reversedwithai, 2026). Obfuscation, packing, and heavy optimization still "
+        "defeat both classical and neural decompilers. Best practice is dual control: "
+        "AI proposes, classical tools measure, humans approve.",
         first_indent=False,
     )
 
-    add_heading_custom(doc, "6.2 Copyright, Anti-Cheat, and Community Norms", level=2)
+    add_heading_custom(doc, "6.2 Legal and Ethical Boundaries", level=2)
     add_body(
         doc,
         "Reverse engineering for interoperability has limited legal traditions in "
-        "some jurisdictions (for example, fair-use discussion around Sega v. "
-        "Accolade; DMCA §1201(f) interoperability exceptions in U.S. law), but "
-        "EULAs, anti-circumvention rules, and game publisher policies still "
-        "constrain many workflows (EFF, n.d.). Mashups that combine two commercial "
-        "titles’ code and assets without licenses raise clear redistribution "
-        "problems; platforms such as Nexus Mods discourage AI-assisted uploads "
-        "that lack rights to the underlying assets (IGN summary, 2026).",
+        "some jurisdictions, but license agreements, anti-circumvention rules, and "
+        "publisher policies still constrain many workflows (EFF, n.d.). Combining "
+        "commercial titles’ code and assets without rights raises redistribution "
+        "problems. Anti-cheat systems are another hard boundary: responsible "
+        "discussion treats online multiplayer bypass as out of scope and emphasizes "
+        "offline experimentation that does not ship proprietary game files.",
         first_indent=False,
     )
     add_body(
         doc,
-        "Anti-cheat systems are another hard boundary. Documented bridges emphasize "
-        "offline launches and never shipping game files. Responsible seminar "
-        "discussion should treat online multiplayer bypass as out of scope. Finally, "
-        "parts of the traditional modding community criticize viral mashups as "
-        "engagement-driven “slop,” arguing that sustainable creativity still "
-        "requires craft and respect for original works (Thomas/IGN, 2026). AI "
-        "capability and community legitimacy are not the same variable.",
+        "Finally, community norms matter. Speed alone is not craft. Sustainable "
+        "technical work still requires verification, respect for original creators, "
+        "and clear separation between research prototypes and redistributable "
+        "products.",
     )
 
     page_break(doc)
@@ -752,29 +672,26 @@ def build():
         doc,
         "Artificial intelligence is transforming software reverse engineering by "
         "attacking its slowest human stages: naming, typing, explaining, and "
-        "iterating candidate patches against binaries. Specialized models and "
-        "in-tool agents produce measurable gains on decompilation benchmarks and "
-        "dramatically accelerate game preservation and experimental modding. Yet "
-        "the foundation remains classical analysis—bytes, control flow, and "
-        "verification oracles.",
+        "iterating candidate patches against binaries. Classical tools remain the "
+        "foundation; AI compresses analysis time on top of them.",
         first_indent=False,
     )
     add_body(
         doc,
-        "Video games make the transformation vivid. Projects that place Minecraft "
-        "systems inside Elden Ring, or that match console functions with agent "
-        "loops, show that ambitious modification of compiled code is no longer "
-        "reserved for multi-year specialist teams alone. The correct story is not "
+        "Video games make the shift concrete. Cross-game runtime bridges show that "
+        "ambitious modification of compiled code—once reserved for multi-year "
+        "specialist teams—can become comparatively practical when reverse "
+        "engineering is accelerated by LLMs and agents. The correct story is not "
         "that AI rewrites games from imagination; it is that AI makes reverse "
         "engineering efficient enough for new classes of binary-level composition.",
     )
     add_body(
         doc,
-        "For engineers and researchers, the actionable lesson is clear: combine "
-        "LLM assistance with Ghidra/IDA-class tooling, insist on automated checks, "
-        "and treat legal and ethical constraints as first-class design inputs. "
-        "Under those conditions, AI-powered reverse engineering is a durable "
-        "direction for security, preservation, and creative systems research.",
+        "For students and practitioners, the lesson is clear: combine LLM assistance "
+        "with Ghidra/IDA-class tooling, insist on automated checks, and treat legal "
+        "and ethical constraints as first-class design inputs. Under those "
+        "conditions, AI-powered reverse engineering is a durable direction for "
+        "security, preservation, and creative systems research.",
     )
 
     page_break(doc)
@@ -783,27 +700,19 @@ def build():
     add_centered(doc, "REFERENCES", size=14, bold=True, space_after=12)
 
     refs = [
-        "Altimit, A. (2026). Injection Toolkit (ITK) & game mods [Computer software]. GitHub. https://github.com/AndrewAltimit/game-mods",
-        "Bustin, J. (2026). minecraft-crossover-bridge [Computer software]. GitHub. https://github.com/justbustin/minecraft-crossover-bridge",
-        "Chen, Q., Lacomis, J., Schwartz, E. J., Le Goues, C., Nebula, & Vasilescu, B. (2022). Augmenting decompiler output with learned variable names and types (DIRTY).",
+        "Chen, Q., Lacomis, J., Schwartz, E. J., Le Goues, C., Nebula, & Vasilescu, B. (2022). Augmenting decompiler output with learned variable names and types.",
         "DecompileBench authors. (2025). DecompileBench: A comprehensive benchmark for evaluating decompilers. arXiv. https://arxiv.org/html/2505.11340v1",
         "Eagle, C. (2011). The IDA Pro book (2nd ed.). No Starch Press.",
         "Electronic Frontier Foundation. (n.d.). Coders’ rights project reverse engineering FAQ. https://www.eff.org/issues/coders/reverse-engineering-faq",
         "Ghidra. (2024). Ghidra software reverse engineering framework. National Security Agency. https://ghidra-sre.org",
         "Hex-Rays. (2025). IDA Assist overview & MCP documentation. https://docs.hex-rays.com",
-        "Lacomis, J., et al. (2019). DIRE: A neural approach to decompiled identifier naming. ASE.",
-        "Lewis, C. (2026). The long tail of LLM-assisted decompilation. https://blog.chrislewis.au/the-long-tail-of-llm-assisted-decompilation/",
-        "MartianLee. (2026). Inside the bridge that runs Minecraft in Elden Ring. https://martianlee.github.io/",
+        "Lewis, C. (2026). The long tail of LLM-assisted decompilation. https://blog.chrislewis.au/",
         "reversedwithai. (2026). AI-assisted game decompilation: matching decomps and ports with agents. https://reversedwithai.com/learn/ai-assisted-game-decompilation",
-        "Sheikh, R. (2026). AI game mashups / Universal Modder mashup skill. https://universal-modder.dev/mashup/",
-        "siddoff. (2026). Minecraft-Ring [Computer software]. GitHub. https://github.com/siddoff/Minecraft-Ring",
+        "Sheikh, R. (2026). Mashup patterns for compiled-game bridges / Universal Modder notes. https://universal-modder.dev/mashup/",
         "Tan, H., Luo, Q., Li, J., & Zhang, Y. (2024). LLM4Decompile: Decompiling binary code with large language models. EMNLP. https://arxiv.org/abs/2403.05286",
-        "Thomas, J. (2026, October). Vibe-coded mashup mods have taken over X this week. IGN Nordic.",
-        "TweakTown / Decrypt. (2026). Coverage of Minecraft-in-Elden-Ring and related AI mashup mods.",
         "Vector 35. (2024). Binary Ninja Sidekick 1.0. https://sidekick.binary.ninja/",
         "Wired, L. (2025). GhidraMCP [Computer software]. GitHub. https://github.com/LaurieWired/GhidraMCP",
         "Wiseguy, M. (2024). N64: Recompiled [Computer software]. https://github.com/Mr-Wiseguy/N64Recomp",
-        "Xie, D., et al. (2024). ReSym: Harnessing LLMs to recover variable and data structure symbols from stripped binaries. ACM CCS.",
     ]
     for ref in refs:
         p = doc.add_paragraph()

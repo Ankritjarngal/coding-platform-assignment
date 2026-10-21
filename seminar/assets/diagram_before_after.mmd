@@ -1,0 +1,21 @@
+flowchart LR
+    subgraph before [Before AI]
+        B1[Expert weeks/months] --> B2[Manual naming]
+        B2 --> B3[Slow iteration]
+    end
+
+    subgraph after [With AI Assist]
+        A1[Same classical tools] --> A2[LLM drafts meaning]
+        A2 --> A3[Agent iterates fast]
+        A3 --> A4[Human verifies]
+    end
+
+    before -.->|productivity jump| after
+
+    style B1 fill:#6B7280,stroke:#6B7280,color:#fff
+    style B2 fill:#6B7280,stroke:#6B7280,color:#fff
+    style B3 fill:#6B7280,stroke:#6B7280,color:#fff
+    style A1 fill:#0B1F3A,stroke:#0B1F3A,color:#fff
+    style A2 fill:#1F7A8C,stroke:#1F7A8C,color:#fff
+    style A3 fill:#E86A33,stroke:#E86A33,color:#fff
+    style A4 fill:#2F3E4E,stroke:#2F3E4E,color:#fff
