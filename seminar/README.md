@@ -7,7 +7,15 @@
 | File | Description |
 | --- | --- |
 | `Ankrit_Jarngal_2023BSE028_Seminar_Report.docx` | Full NIT-format seminar report |
-| `Ankrit_Jarngal_2023BSE028_Seminar_PPT.pptx` | 9-slide talk deck (balanced text + Mermaid diagrams) |
+| `Ankrit_Jarngal_2023BSE028_Seminar_PPT.pptx` | 9-slide dark keynote deck + Mermaid diagrams |
+
+## PPT theme (researched)
+
+Dark Modern / Keynote-Minimal / Monolith:
+- Stage `#0E1116`, text `#E8EAED`, muted `#9AA4B2`, single accent `#4DA3FF`
+- Oversized headlines, monospace eyebrows, hairlines, lots of empty space
+- One idea per slide; short supporting copy (no bullet walls)
+- Refs: Duarte slide:ology, SlideSpeak Monolith / Keynote Minimal, Dark Modern tech-talk style
 
 ## PPT flow (9 slides)
 
@@ -16,10 +24,11 @@
 3. Traditional RE process (+ diagram)  
 4. What is AI-assisted RE  
 5. How AI made it faster (+ diagram)  
-6. Case study: modifying compiled games (no brand-name spam)  
-7. How those mods work — bridge architecture (+ diagram)  
-8. Challenges & ethics  
-9. Conclusion  
+6. Case study: modifying compiled games (generic)  
+7. Bridge architecture (+ diagram)  
+8. Limits  
+9. Takeaway  
+
 
 ## Regenerate
 

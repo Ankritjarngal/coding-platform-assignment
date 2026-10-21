@@ -1,25 +1,9 @@
-flowchart TB
-    subgraph host [Host Game Process]
-        H1[Compiled Engine]
-        H2[World / Physics / Renderer]
-        H1 --- H2
-    end
+flowchart LR
+    G[Guest Process] --> BR[Bridge Layer]
+    H[Host Process] --> BR
+    BR --> OUT[Composited Frame]
 
-    subgraph guest [Guest Game Process]
-        G1[Compiled Engine]
-        G2[Player Systems / Logic]
-        G1 --- G2
-    end
-
-    BR[Bridge Layer<br/>hooks · shared memory · IPC]
-
-    G2 <-->|camera · collision · events| BR
-    BR <-->|state · damage · frames| H2
-    BR --> OUT[Single Composited Frame]
-
-    style H1 fill:#0B1F3A,stroke:#0B1F3A,color:#fff
-    style H2 fill:#0B1F3A,stroke:#0B1F3A,color:#fff
-    style G1 fill:#1F7A8C,stroke:#1F7A8C,color:#fff
-    style G2 fill:#1F7A8C,stroke:#1F7A8C,color:#fff
-    style BR fill:#E86A33,stroke:#E86A33,color:#fff
-    style OUT fill:#2F3E4E,stroke:#2F3E4E,color:#fff
+    style G fill:#171B22,stroke:#2A313B,color:#E8EAED
+    style H fill:#171B22,stroke:#2A313B,color:#E8EAED
+    style BR fill:#1A2332,stroke:#4DA3FF,color:#E8EAED
+    style OUT fill:#171B22,stroke:#4DA3FF,color:#E8EAED

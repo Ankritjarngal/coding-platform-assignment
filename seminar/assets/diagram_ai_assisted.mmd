@@ -1,21 +1,15 @@
 flowchart TB
-    subgraph classical [Classical Foundation]
-        B[Binary] --> T[Ghidra / IDA / Binary Ninja]
-        T --> P[Pseudo-code]
-    end
+    B[Binary] --> T[Classical Tools]
+    T --> P[Pseudo-code]
+    P --> L[LLM refine]
+    L --> A[Agent iterate]
+    A --> V[Verify]
+    V --> H[Approved result]
 
-    subgraph ai [AI Acceleration Layer]
-        P --> L[LLM: rename, explain, refine]
-        L --> A[Coding Agent]
-        A --> V[Verify against binary]
-    end
-
-    V --> H[Faster human-approved result]
-
-    style B fill:#0B1F3A,stroke:#0B1F3A,color:#fff
-    style T fill:#1F7A8C,stroke:#1F7A8C,color:#fff
-    style P fill:#1F7A8C,stroke:#1F7A8C,color:#fff
-    style L fill:#E86A33,stroke:#E86A33,color:#fff
-    style A fill:#E86A33,stroke:#E86A33,color:#fff
-    style V fill:#2F3E4E,stroke:#2F3E4E,color:#fff
-    style H fill:#0B1F3A,stroke:#0B1F3A,color:#fff
+    style B fill:#171B22,stroke:#2A313B,color:#E8EAED
+    style T fill:#171B22,stroke:#2A313B,color:#E8EAED
+    style P fill:#171B22,stroke:#2A313B,color:#E8EAED
+    style L fill:#1A2332,stroke:#4DA3FF,color:#E8EAED
+    style A fill:#1A2332,stroke:#4DA3FF,color:#E8EAED
+    style V fill:#171B22,stroke:#2A313B,color:#E8EAED
+    style H fill:#171B22,stroke:#4DA3FF,color:#E8EAED
